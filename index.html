@@ -370,91 +370,89 @@
 
         async function saveAsImage() {
             try {
-                // 캡처할 영역을 정확하게 지정 (버튼 영역 제외)
-                const captureArea = document.querySelector('.classroom');
+                // 캡처할 영역 (버튼 상위의 컨테이너)
+                const captureArea = document.querySelector('.container').children[0];
                 
-                // 원본 스타일 저장
+                // 캡처 전 스크롤 위치 저장
+                const scrollPos = window.scrollY;
+                
+                // 임시 스타일 적용
                 const originalStyle = captureArea.style.cssText;
-                
-                // 캡처를 위한 임시 스타일 적용
+                captureArea.style.transform = 'none';
                 captureArea.style.backgroundColor = '#ffffff';
-                captureArea.style.padding = '20px';
                 captureArea.style.margin = '0';
+                captureArea.style.padding = '20px';
                 
-                // html2canvas 설정
-                const canvas = await html2canvas(captureArea, {
+                // 전체 내용이 포함되도록 설정
+                const options = {
                     backgroundColor: '#ffffff',
                     scale: 2,
                     useCORS: true,
-                    logging: true,
-                    // 정확한 크기 설정
-                    width: captureArea.offsetWidth,
-                    height: captureArea.offsetHeight
-                });
-                
-                // 원본 스타일 복구
-                captureArea.style.cssText = originalStyle;
+                    scrollY: -window.scrollY,
+                    windowWidth: captureArea.scrollWidth,
+                    windowHeight: captureArea.scrollHeight,
+                    width: captureArea.scrollWidth,
+                    height: captureArea.scrollHeight,
+                    // 캡처 영역 확실히 지정
+                    onclone: function(clonedDoc) {
+                        const clonedElement = clonedDoc.querySelector('.container').children[0];
+                        clonedElement.style.transform = 'none';
+                        clonedElement.style.margin = '0';
+                        clonedElement.style.padding = '20px';
+                    }
+                };
 
+                const canvas = await html2canvas(captureArea, options);
+                
+                // 원래 스타일 복구
+                captureArea.style.cssText = originalStyle;
+                
                 // 파일명 설정
                 const now = new Date();
                 const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.jpeg`;
 
-                // 모바일 여부 확인
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-                if (isMobile) {
-                    // 모바일용 다운로드 처리
-                    canvas.toBlob(function(blob) {
-                        // 파일 다운로드를 위한 객체 생성
-                        const file = new File([blob], fileName, { type: 'image/jpeg' });
-                        
-                        // 다운로드 링크 생성
-                        const url = URL.createObjectURL(file);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = fileName;
-                        
-                        // 다운로드 트리거
-                        document.body.appendChild(link);
-                        link.click();
-                        
-                        // 정리
-                        setTimeout(() => {
-                            URL.revokeObjectURL(url);
-                            document.body.removeChild(link);
-                        }, 100);
-                    }, 'image/jpeg', 1.0);
-                } else {
-                    // PC용 다운로드 처리
-                    canvas.toBlob(function(blob) {
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = fileName;
-                        document.body.appendChild(link);
-                        link.click();
-                        
-                        // 정리
-                        setTimeout(() => {
-                            URL.revokeObjectURL(url);
-                            document.body.removeChild(link);
-                        }, 100);
-                    }, 'image/jpeg', 1.0);
-                }
+                // Blob 생성 및 다운로드
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    
+                    // iOS Safari를 위한 특별 처리
+                    if (navigator.userAgent.match(/(iPad|iPhone|iPod)/i)) {
+                        link.target = '_blank';
+                        link.rel = 'noopener';
+                    }
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    
+                    // 정리
+                    setTimeout(() => {
+                        URL.revokeObjectURL(url);
+                        document.body.removeChild(link);
+                        // 스크롤 위치 복구
+                        window.scrollTo(0, scrollPos);
+                    }, 100);
+                }, 'image/jpeg', 1.0);
 
             } catch (error) {
-                console.error('이미지 저장 중 오류 발생:', error);
+                console.error('이미지 저장 중 오류:', error);
                 alert('이미지 저장에 실패했습니다. 다시 시도해 주세요.');
             }
         }
 
-        // 이벤트 리스너 설정
-        document.getElementById('saveButton').addEventListener('click', saveAsImage);
-        // 모바일 터치 이벤트 추가
-        document.getElementById('saveButton').addEventListener('touchend', function(e) {
+        // 이벤트 리스너
+        const saveButton = document.getElementById('saveButton');
+        saveButton.addEventListener('click', function(e) {
             e.preventDefault();
             saveAsImage();
         });
+        
+        saveButton.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            saveAsImage();
+        }, { passive: false });
 
         document.addEventListener('DOMContentLoaded', function() {
             const chart = document.getElementById('seating-chart');
