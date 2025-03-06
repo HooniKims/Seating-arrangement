@@ -369,89 +369,110 @@
         }
 
         async function saveAsImage() {
+            // 저장 버튼
+            const saveBtn = document.getElementById('saveButton');
+            saveBtn.disabled = true;
+
             try {
-                // 캡처할 영역 (버튼 상위의 컨테이너)
-                const captureArea = document.querySelector('.container').children[0];
+                // 캡처할 영역 (자리배치도 전체)
+                const captureArea = document.querySelector('.seating-chart');
                 
-                // 캡처 전 스크롤 위치 저장
-                const scrollPos = window.scrollY;
-                
-                // 임시 스타일 적용
+                // 버튼들 임시 숨김
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(btn => btn.style.display = 'none');
+
+                // 캡처 영역 스타일 임시 조정
                 const originalStyle = captureArea.style.cssText;
-                captureArea.style.transform = 'none';
                 captureArea.style.backgroundColor = '#ffffff';
-                captureArea.style.margin = '0';
                 captureArea.style.padding = '20px';
-                
-                // 전체 내용이 포함되도록 설정
-                const options = {
+                captureArea.style.margin = '0';
+
+                // html2canvas 실행
+                const canvas = await html2canvas(captureArea, {
                     backgroundColor: '#ffffff',
                     scale: 2,
                     useCORS: true,
-                    scrollY: -window.scrollY,
-                    windowWidth: captureArea.scrollWidth,
-                    windowHeight: captureArea.scrollHeight,
-                    width: captureArea.scrollWidth,
-                    height: captureArea.scrollHeight,
-                    // 캡처 영역 확실히 지정
-                    onclone: function(clonedDoc) {
-                        const clonedElement = clonedDoc.querySelector('.container').children[0];
-                        clonedElement.style.transform = 'none';
-                        clonedElement.style.margin = '0';
-                        clonedElement.style.padding = '20px';
-                    }
-                };
+                    allowTaint: true,
+                    logging: false,
+                    width: captureArea.offsetWidth,
+                    height: captureArea.offsetHeight
+                });
 
-                const canvas = await html2canvas(captureArea, options);
-                
                 // 원래 스타일 복구
                 captureArea.style.cssText = originalStyle;
-                
-                // 파일명 설정
-                const now = new Date();
-                const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.jpeg`;
+                buttons.forEach(btn => btn.style.display = '');
 
-                // Blob 생성 및 다운로드
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
+                // 이미지 데이터 생성
+                const imageData = canvas.toDataURL('image/jpeg', 1.0);
+
+                // 다운로드 처리
+                const downloadImage = () => {
                     const link = document.createElement('a');
-                    link.href = url;
+                    const fileName = `자리배치도_${new Date().getTime()}.jpeg`;
+                    
+                    link.href = imageData;
                     link.download = fileName;
-                    
-                    // iOS Safari를 위한 특별 처리
-                    if (navigator.userAgent.match(/(iPad|iPhone|iPod)/i)) {
-                        link.target = '_blank';
-                        link.rel = 'noopener';
-                    }
-                    
                     document.body.appendChild(link);
                     link.click();
-                    
-                    // 정리
-                    setTimeout(() => {
-                        URL.revokeObjectURL(url);
-                        document.body.removeChild(link);
-                        // 스크롤 위치 복구
-                        window.scrollTo(0, scrollPos);
-                    }, 100);
-                }, 'image/jpeg', 1.0);
+                    document.body.removeChild(link);
+                };
+
+                // 모바일 기기 확인
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    // 모바일용 다운로드
+                    const newWindow = window.open('');
+                    newWindow.document.write(`
+                        <html>
+                        <head>
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>자리배치도 저장</title>
+                        </head>
+                        <body style="margin:0; display:flex; flex-direction:column; align-items:center; background:#f0f0f0;">
+                            <img src="${imageData}" style="max-width:100%; height:auto; margin:10px;">
+                            <a href="${imageData}" download="자리배치도.jpeg" 
+                               style="display:block; margin:20px; padding:10px 20px; 
+                                      background:#4CAF50; color:white; text-decoration:none; 
+                                      border-radius:5px; font-size:16px;">
+                                이미지 저장하기
+                            </a>
+                        </body>
+                        </html>
+                    `);
+                } else {
+                    // PC용 다운로드
+                    downloadImage();
+                }
 
             } catch (error) {
-                console.error('이미지 저장 중 오류:', error);
+                console.error('이미지 저장 오류:', error);
                 alert('이미지 저장에 실패했습니다. 다시 시도해 주세요.');
+            } finally {
+                // 버튼 활성화
+                setTimeout(() => {
+                    saveBtn.disabled = false;
+                }, 1000);
             }
         }
 
         // 이벤트 리스너
         const saveButton = document.getElementById('saveButton');
-        saveButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            saveAsImage();
-        });
         
-        saveButton.addEventListener('touchend', function(e) {
+        // PC 클릭 이벤트
+        saveButton.addEventListener('click', (e) => {
             e.preventDefault();
-            saveAsImage();
+            if (!saveButton.disabled) {
+                saveAsImage();
+            }
+        });
+
+        // 모바일 터치 이벤트
+        saveButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!saveButton.disabled) {
+                saveAsImage();
+            }
         }, { passive: false });
 
         document.addEventListener('DOMContentLoaded', function() {
