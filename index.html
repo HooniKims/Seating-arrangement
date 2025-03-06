@@ -380,51 +380,43 @@
                         scale: 2,
                         useCORS: true,
                         allowTaint: true,
-                        logging: true,
                         letterRendering: true,
-                        foreignObjectRendering: true
+                        foreignObjectRendering: true,
+                        width: captureArea.offsetWidth,
+                        height: captureArea.offsetHeight,
+                        windowWidth: document.documentElement.offsetWidth,
+                        windowHeight: document.documentElement.offsetHeight
                     });
 
                     const now = new Date();
-                    const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.jpeg`;
+                    const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.jpeg`;
 
                     canvas.toBlob((blob) => {
                         try {
-                            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                                const file = new File([blob], fileName, { type: 'image/jpeg' });
-                                const url = URL.createObjectURL(file);
-                                
-                                const newTab = window.open();
-                                if (newTab) {
-                                    newTab.document.write(`
-                                        <html>
-                                            <head>
-                                                <title>${fileName}</title>
-                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                            </head>
-                                            <body style="margin:0; display:flex; justify-content:center; align-items:center; background-color:#f0f0f0;">
-                                                <img src="${url}" style="max-width:100%; height:auto;">
-                                                <div style="position:fixed; bottom:20px; left:0; right:0; text-align:center; padding:10px;">
-                                                    <p>이미지를 길게 터치한 후 저장하세요.</p>
-                                                </div>
-                                            </body>
-                                        </html>
-                                    `);
-                                    newTab.document.close();
-                                }
-                            } else {
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = fileName;
-                                document.body.appendChild(link);
-                                link.click();
+                            const file = new File([blob], fileName, { type: 'image/jpeg' });
+                            
+                            const downloadUrl = URL.createObjectURL(file);
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.download = fileName;
+                            document.body.appendChild(link);
+                            link.click();
+                            
+                            setTimeout(() => {
                                 document.body.removeChild(link);
-                                URL.revokeObjectURL(url);
-                            }
+                                URL.revokeObjectURL(downloadUrl);
+                            }, 100);
+
                         } catch (error) {
                             console.error('파일 저장 중 오류:', error);
-                            alert('이미지 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+                            const downloadUrl = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.download = fileName;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(downloadUrl);
                         }
                     }, 'image/jpeg', 1.0);
 
@@ -444,16 +436,14 @@
             
             const handleSave = async (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 if (!saveButton.disabled) {
                     await saveAsImage();
                 }
             };
 
-            saveButton.addEventListener('click', handleSave);
-            saveButton.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                handleSave(e);
-            });
+            saveButton.addEventListener('click', handleSave, false);
+            saveButton.addEventListener('touchend', handleSave, false);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
