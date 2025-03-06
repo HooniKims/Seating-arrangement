@@ -353,29 +353,87 @@
             const saveBtn = document.getElementById('saveButton');
             if (!saveBtn.disabled) {
                 try {
+                    // 저장 버튼 비활성화 (중복 클릭 방지)
+                    saveBtn.disabled = true;
+
+                    // 캡처 영역 설정
                     const captureArea = document.getElementById('capture-area');
+                    
+                    // html2canvas 옵션 설정
                     const canvas = await html2canvas(captureArea, {
                         backgroundColor: '#ffffff',
                         scale: 2,
                         useCORS: true,
-                        allowTaint: true
+                        allowTaint: true,
+                        logging: true,
+                        letterRendering: true,
+                        foreignObjectRendering: true
                     });
 
+                    // 현재 날짜로 파일명 생성
+                    const now = new Date();
+                    const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.png`;
+
+                    // 모바일 기기 확인
                     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                        window.open(canvas.toDataURL('image/png'));
+                        // 모바일에서는 새 창에서 이미지 열기
+                        const imageUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+                        window.open(imageUrl);
                     } else {
-                        const link = document.createElement('a');
-                        const now = new Date();
-                        const fileName = `자리배치도_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}.png`;
-                        link.download = fileName;
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
+                        // PC에서는 직접 다운로드
+                        try {
+                            // 방법 1: a 태그 사용
+                            const link = document.createElement('a');
+                            link.download = fileName;
+                            link.href = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        } catch (err) {
+                            // 방법 1 실패시 방법 2 시도: Blob 사용
+                            canvas.toBlob(function(blob) {
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.download = fileName;
+                                link.href = url;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                            }, 'image/png');
+                        }
                     }
                 } catch (error) {
                     console.error('이미지 저장 중 오류 발생:', error);
-                    alert('이미지 저장 중 오류가 발생했습니다.');
+                    alert('이미지 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+                } finally {
+                    // 저장 버튼 다시 활성화
+                    setTimeout(() => {
+                        saveBtn.disabled = false;
+                    }, 1000);
                 }
             }
+        }
+
+        // 이미지 저장 버튼에 이벤트 리스너 추가
+        function addSaveButtonListener() {
+            const saveButton = document.getElementById('saveButton');
+            
+            // PC 환경
+            saveButton.addEventListener('click', async function(e) {
+                e.preventDefault();
+                if (!this.disabled) {
+                    await saveAsImage();
+                }
+            });
+
+            // 모바일 환경
+            saveButton.addEventListener('touchend', async function(e) {
+                e.preventDefault();
+                if (!this.disabled) {
+                    await saveAsImage();
+                }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -383,6 +441,7 @@
             chart.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">배치 시작 버튼을 눌러주세요.</div>';
             updateDate();
             addButtonListeners();
+            addSaveButtonListener();
         });
 
         document.addEventListener('touchstart', function(e) {
@@ -399,3 +458,4 @@
     </script>
 </body>
 </html>
+
