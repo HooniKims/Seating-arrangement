@@ -130,8 +130,9 @@
         .date-display {
             text-align: right;
             padding: 10px;
-            color: #666;
-            font-size: clamp(12px, 2vw, 14px);
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
         }
         @media screen and (max-width: 768px) {
             .classroom {
@@ -148,6 +149,10 @@
                 margin: 5px 0;
                 padding: 20px;
                 font-size: 18px;
+            }
+            .date-display {
+                font-size: 12px;
+                padding: 8px;
             }
         }
         @media screen and (max-width: 360px) {
@@ -340,13 +345,27 @@
         function updateDate() {
             const dateDisplay = document.getElementById('currentDate');
             const now = new Date();
+            
             const dateStr = now.toLocaleDateString('ko-KR', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 weekday: 'long'
             });
-            dateDisplay.textContent = `작성일: ${dateStr}`;
+            
+            const timeStr = now.toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            dateDisplay.textContent = `작성일: ${dateStr} ${timeStr}`;
+        }
+
+        function startClock() {
+            updateDate();
+            setInterval(updateDate, 1000);
         }
 
         async function saveAsImage() {
@@ -366,42 +385,68 @@
                         foreignObjectRendering: true
                     });
 
-                    // 현재 날짜로 파일명 생성 (확장자 jpeg로 변경)
                     const now = new Date();
-                    const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.jpeg`;
+                    const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.jpeg`;
 
-                    // 모바일 기기 확인
-                    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                        // 모바일에서는 새 창에서 이미지 열기 (JPEG 형식)
-                        const imageUrl = canvas.toDataURL('image/jpeg', 1.0).replace('image/jpeg', 'image/octet-stream');
-                        window.open(imageUrl);
-                    } else {
-                        // PC에서는 직접 다운로드
+                    canvas.toBlob(async function(blob) {
                         try {
-                            // 방법 1: a 태그 사용 (JPEG 형식)
-                            const link = document.createElement('a');
-                            link.download = fileName;
-                            // JPEG 품질 1.0 (최상)으로 설정
-                            link.href = canvas.toDataURL('image/jpeg', 1.0).replace('image/jpeg', 'image/octet-stream');
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                        } catch (err) {
-                            // 방법 2: Blob 사용 (JPEG 형식)
-                            canvas.toBlob(function(blob) {
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.download = fileName;
-                                link.href = url;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                            }, 'image/jpeg', 1.0);  // JPEG 형식, 품질 1.0
+                            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                                if ('showSaveFilePicker' in window) {
+                                    try {
+                                        const handle = await window.showSaveFilePicker({
+                                            suggestedName: fileName,
+                                            types: [{
+                                                description: 'JPEG 이미지',
+                                                accept: {'image/jpeg': ['.jpeg']},
+                                            }],
+                                        });
+                                        const writable = await handle.createWritable();
+                                        await writable.write(blob);
+                                        await writable.close();
+                                    } catch (err) {
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = fileName;
+                                        a.style.display = 'none';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                        document.body.removeChild(a);
+                                    }
+                                } else {
+                                    const reader = new FileReader();
+                                    reader.onload = function() {
+                                        const url = reader.result;
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = fileName;
+                                        a.style.display = 'none';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                    };
+                                    reader.readAsDataURL(blob);
+                                }
+                            } else {
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                            }
+                        } catch (error) {
+                            console.error('파일 저장 중 오류:', error);
+                            const url = URL.createObjectURL(blob);
+                            window.open(url, '_blank');
                         }
-                    }
+                    }, 'image/jpeg', 1.0);
+
                 } catch (error) {
-                    console.error('이미지 저장 중 오류 발생:', error);
+                    console.error('이미지 생성 중 오류 발생:', error);
                     alert('이미지 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
                 } finally {
                     setTimeout(() => {
@@ -411,31 +456,25 @@
             }
         }
 
-        // 이미지 저장 버튼에 이벤트 리스너 추가
         function addSaveButtonListener() {
             const saveButton = document.getElementById('saveButton');
             
-            // PC 환경
-            saveButton.addEventListener('click', async function(e) {
+            const handleSave = async (e) => {
                 e.preventDefault();
-                if (!this.disabled) {
+                if (!saveButton.disabled) {
                     await saveAsImage();
                 }
-            });
+            };
 
-            // 모바일 환경
-            saveButton.addEventListener('touchend', async function(e) {
-                e.preventDefault();
-                if (!this.disabled) {
-                    await saveAsImage();
-                }
-            });
+            saveButton.addEventListener('click', handleSave);
+            
+            saveButton.addEventListener('touchend', handleSave);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             const chart = document.getElementById('seating-chart');
             chart.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">배치 시작 버튼을 눌러주세요.</div>';
-            updateDate();
+            startClock();
             addButtonListeners();
             addSaveButtonListener();
         });
