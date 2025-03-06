@@ -208,43 +208,70 @@
         }
 
         function addButtonListeners() {
-            document.getElementById('startButton').addEventListener('touchend', function(e) {
-                e.preventDefault();
-                if (!this.disabled) {
-                    startSeating();
-                }
-            }, false);
+            // 기존 이벤트 리스너들은 제거하고 새로운 터치 이벤트 처리 로직으로 대체
+            const buttons = document.querySelectorAll('.button');
+            
+            buttons.forEach(button => {
+                let isTouching = false;
+                let initialTouchX = null;
+                let initialTouchY = null;
+                let hasMoved = false;
 
-            document.getElementById('shuffleButton').addEventListener('touchend', function(e) {
-                e.preventDefault();
-                if (!this.disabled) {
-                    shuffleSeats();
-                }
-            }, false);
+                button.addEventListener('touchstart', function(e) {
+                    isTouching = true;
+                    let touch = e.touches[0];
+                    initialTouchX = touch.clientX;
+                    initialTouchY = touch.clientY;
+                    hasMoved = false;
+                }, { passive: true });
 
-            document.getElementById('saveButton').addEventListener('touchend', function(e) {
-                e.preventDefault();
-                if (!this.disabled) {
-                    saveAsImage();
-                }
-            }, false);
+                button.addEventListener('touchmove', function(e) {
+                    if (isTouching) {
+                        let touch = e.touches[0];
+                        let currentX = touch.clientX;
+                        let currentY = touch.clientY;
 
-            document.getElementById('startButton').addEventListener('click', function(e) {
-                if (!this.disabled) {
-                    startSeating();
-                }
-            });
+                        // 이동 거리가 10px 이상일 경우 이동으로 간주
+                        let deltaX = Math.abs(currentX - initialTouchX);
+                        let deltaY = Math.abs(currentY - initialTouchY);
 
-            document.getElementById('shuffleButton').addEventListener('click', function(e) {
-                if (!this.disabled) {
-                    shuffleSeats();
-                }
-            });
+                        if (deltaX > 10 || deltaY > 10) {
+                            hasMoved = true;
+                        }
+                    }
+                }, { passive: true });
 
-            document.getElementById('saveButton').addEventListener('click', function(e) {
-                if (!this.disabled) {
-                    saveAsImage();
-                }
+                button.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    
+                    // 이동하지 않았고 버튼이 비활성화되지 않은 경우에만 클릭 동작 실행
+                    if (!hasMoved && !button.disabled) {
+                        if (button.id === 'startButton') {
+                            startSeating();
+                        } else if (button.id === 'shuffleButton') {
+                            shuffleSeats();
+                        } else if (button.id === 'saveButton') {
+                            saveAsImage();
+                        }
+                    }
+
+                    isTouching = false;
+                    initialTouchX = null;
+                    initialTouchY = null;
+                }, { passive: false });
+
+                // PC 환경을 위한 클릭 이벤트 유지
+                button.addEventListener('click', function(e) {
+                    if (!('ontouchstart' in window) && !button.disabled) {
+                        if (button.id === 'startButton') {
+                            startSeating();
+                        } else if (button.id === 'shuffleButton') {
+                            shuffleSeats();
+                        } else if (button.id === 'saveButton') {
+                            saveAsImage();
+                        }
+                    }
+                });
             });
         }
 
@@ -404,46 +431,15 @@
 
                 // 이미지 데이터 생성
                 const imageData = canvas.toDataURL('image/jpeg', 1.0);
+                const fileName = `자리배치도_${new Date().getTime()}.jpeg`;
 
-                // 다운로드 처리
-                const downloadImage = () => {
-                    const link = document.createElement('a');
-                    const fileName = `자리배치도_${new Date().getTime()}.jpeg`;
-                    
-                    link.href = imageData;
-                    link.download = fileName;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                };
-
-                // 모바일 기기 확인
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-                if (isMobile) {
-                    // 모바일용 다운로드
-                    const newWindow = window.open('');
-                    newWindow.document.write(`
-                        <html>
-                        <head>
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>자리배치도 저장</title>
-                        </head>
-                        <body style="margin:0; display:flex; flex-direction:column; align-items:center; background:#f0f0f0;">
-                            <img src="${imageData}" style="max-width:100%; height:auto; margin:10px;">
-                            <a href="${imageData}" download="자리배치도.jpeg" 
-                               style="display:block; margin:20px; padding:10px 20px; 
-                                      background:#4CAF50; color:white; text-decoration:none; 
-                                      border-radius:5px; font-size:16px;">
-                                이미지 저장하기
-                            </a>
-                        </body>
-                        </html>
-                    `);
-                } else {
-                    // PC용 다운로드
-                    downloadImage();
-                }
+                // 다운로드 링크 생성 및 클릭
+                const link = document.createElement('a');
+                link.href = imageData;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
 
             } catch (error) {
                 console.error('이미지 저장 오류:', error);
@@ -456,95 +452,12 @@
             }
         }
 
-        // 이벤트 리스너
-        const saveButton = document.getElementById('saveButton');
-        
-        // PC 클릭 이벤트
-        saveButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (!saveButton.disabled) {
-                saveAsImage();
-            }
-        });
-
-        // 모바일 터치 이벤트
-        saveButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            if (!saveButton.disabled) {
-                saveAsImage();
-            }
-        }, { passive: false });
-
         document.addEventListener('DOMContentLoaded', function() {
             const chart = document.getElementById('seating-chart');
             chart.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">배치 시작 버튼을 눌러주세요.</div>';
             startClock();
             addButtonListeners();
         });
-
-        // 터치 상태 추적 변수
-        let touchStartTime = 0;
-        let touchStartPos = { x: 0, y: 0 };
-        let hasMoved = false;
-
-        // 배치 시작 버튼 설정
-        const startButton = document.getElementById('startButton');
-        const originalStartFunction = startButton.onclick;
-
-        // 버튼의 터치 시작 이벤트
-        startButton.addEventListener('touchstart', function(e) {
-            touchStartTime = Date.now();
-            touchStartPos = {
-                x: e.touches[0].clientX,
-                y: e.touches[0].clientY
-            };
-            hasMoved = false;
-        }, { passive: true });
-
-        // 버튼의 터치 이동 이벤트
-        startButton.addEventListener('touchmove', function(e) {
-            const moveThreshold = 5; // 5픽셀 이상 움직이면 이동으로 간주
-            const deltaX = Math.abs(e.touches[0].clientX - touchStartPos.x);
-            const deltaY = Math.abs(e.touches[0].clientY - touchStartPos.y);
-            
-            if (deltaX > moveThreshold || deltaY > moveThreshold) {
-                hasMoved = true;
-            }
-        }, { passive: true });
-
-        // 버튼의 터치 종료 이벤트
-        startButton.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            
-            // 이동했거나 버튼이 비활성화된 경우 실행하지 않음
-            if (hasMoved || startButton.disabled) {
-                return false;
-            }
-
-            // 이동이 없었을 때만 배치 시작 실행
-            originalStartFunction.call(this);
-            
-            // 버튼 비활성화
-            startButton.disabled = true;
-            startButton.style.backgroundColor = '#cccccc';
-            startButton.onclick = null;
-        }, { passive: false });
-
-        // 기존 클릭 이벤트 수정
-        startButton.onclick = function(event) {
-            // 터치 기기가 아닐 경우에만 실행
-            if (!('ontouchstart' in window)) {
-                originalStartFunction.call(this);
-                startButton.disabled = true;
-                startButton.style.backgroundColor = '#cccccc';
-                startButton.onclick = null;
-            }
-        };
-
-        // 터치 취소 이벤트
-        startButton.addEventListener('touchcancel', function() {
-            hasMoved = false;
-        }, { passive: true });
     </script>
 </body>
 </html>
