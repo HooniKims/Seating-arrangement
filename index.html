@@ -383,42 +383,56 @@
                         letterRendering: true,
                         foreignObjectRendering: true,
                         width: captureArea.offsetWidth,
-                        height: captureArea.offsetHeight,
-                        windowWidth: document.documentElement.offsetWidth,
-                        windowHeight: document.documentElement.offsetHeight
+                        height: captureArea.offsetHeight
                     });
 
                     const now = new Date();
                     const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.jpeg`;
 
-                    canvas.toBlob((blob) => {
-                        try {
-                            const file = new File([blob], fileName, { type: 'image/jpeg' });
-                            
-                            const downloadUrl = URL.createObjectURL(file);
-                            const link = document.createElement('a');
-                            link.href = downloadUrl;
-                            link.download = fileName;
-                            document.body.appendChild(link);
-                            link.click();
-                            
-                            setTimeout(() => {
-                                document.body.removeChild(link);
-                                URL.revokeObjectURL(downloadUrl);
-                            }, 100);
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-                        } catch (error) {
-                            console.error('파일 저장 중 오류:', error);
-                            const downloadUrl = URL.createObjectURL(blob);
+                    if (isMobile) {
+                        try {
+                            const imageData = canvas.toDataURL('image/jpeg', 1.0);
+                            
                             const link = document.createElement('a');
-                            link.href = downloadUrl;
+                            link.href = imageData;
+                            link.download = fileName;
+                            
+                            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                                const image = new Image();
+                                image.src = imageData;
+                                
+                                const w = window.open("");
+                                w.document.write(image.outerHTML);
+                                w.document.title = fileName;
+                                alert('이미지를 길게 눌러서 저장하세요.');
+                            } else {
+                                link.click();
+                            }
+                        } catch (err) {
+                            console.error('모바일 저장 오류:', err);
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = fileName;
+                                link.click();
+                                URL.revokeObjectURL(url);
+                            }, 'image/jpeg', 1.0);
+                        }
+                    } else {
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
                             link.download = fileName;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                            URL.revokeObjectURL(downloadUrl);
-                        }
-                    }, 'image/jpeg', 1.0);
+                            URL.revokeObjectURL(url);
+                        }, 'image/jpeg', 1.0);
+                    }
 
                 } catch (error) {
                     console.error('이미지 생성 중 오류 발생:', error);
@@ -442,8 +456,12 @@
                 }
             };
 
+            saveButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleSave(e);
+            }, false);
+
             saveButton.addEventListener('click', handleSave, false);
-            saveButton.addEventListener('touchend', handleSave, false);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
