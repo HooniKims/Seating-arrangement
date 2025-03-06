@@ -353,13 +353,9 @@
             const saveBtn = document.getElementById('saveButton');
             if (!saveBtn.disabled) {
                 try {
-                    // 저장 버튼 비활성화 (중복 클릭 방지)
                     saveBtn.disabled = true;
-
-                    // 캡처 영역 설정
                     const captureArea = document.getElementById('capture-area');
                     
-                    // html2canvas 옵션 설정
                     const canvas = await html2canvas(captureArea, {
                         backgroundColor: '#ffffff',
                         scale: 2,
@@ -370,27 +366,28 @@
                         foreignObjectRendering: true
                     });
 
-                    // 현재 날짜로 파일명 생성
+                    // 현재 날짜로 파일명 생성 (확장자 jpeg로 변경)
                     const now = new Date();
-                    const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.png`;
+                    const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.jpeg`;
 
                     // 모바일 기기 확인
                     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                        // 모바일에서는 새 창에서 이미지 열기
-                        const imageUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+                        // 모바일에서는 새 창에서 이미지 열기 (JPEG 형식)
+                        const imageUrl = canvas.toDataURL('image/jpeg', 1.0).replace('image/jpeg', 'image/octet-stream');
                         window.open(imageUrl);
                     } else {
                         // PC에서는 직접 다운로드
                         try {
-                            // 방법 1: a 태그 사용
+                            // 방법 1: a 태그 사용 (JPEG 형식)
                             const link = document.createElement('a');
                             link.download = fileName;
-                            link.href = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+                            // JPEG 품질 1.0 (최상)으로 설정
+                            link.href = canvas.toDataURL('image/jpeg', 1.0).replace('image/jpeg', 'image/octet-stream');
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
                         } catch (err) {
-                            // 방법 1 실패시 방법 2 시도: Blob 사용
+                            // 방법 2: Blob 사용 (JPEG 형식)
                             canvas.toBlob(function(blob) {
                                 const url = window.URL.createObjectURL(blob);
                                 const link = document.createElement('a');
@@ -400,14 +397,13 @@
                                 link.click();
                                 document.body.removeChild(link);
                                 window.URL.revokeObjectURL(url);
-                            }, 'image/png');
+                            }, 'image/jpeg', 1.0);  // JPEG 형식, 품질 1.0
                         }
                     }
                 } catch (error) {
                     console.error('이미지 저장 중 오류 발생:', error);
                     alert('이미지 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
                 } finally {
-                    // 저장 버튼 다시 활성화
                     setTimeout(() => {
                         saveBtn.disabled = false;
                     }, 1000);
