@@ -208,7 +208,6 @@
         }
 
         function addButtonListeners() {
-            // 기존 이벤트 리스너들은 제거하고 새로운 터치 이벤트 처리 로직으로 대체
             const buttons = document.querySelectorAll('.button');
             
             buttons.forEach(button => {
@@ -218,6 +217,9 @@
                 let hasMoved = false;
 
                 button.addEventListener('touchstart', function(e) {
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
+                    }
                     isTouching = true;
                     let touch = e.touches[0];
                     initialTouchX = touch.clientX;
@@ -226,12 +228,14 @@
                 }, { passive: true });
 
                 button.addEventListener('touchmove', function(e) {
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
+                    }
                     if (isTouching) {
                         let touch = e.touches[0];
                         let currentX = touch.clientX;
                         let currentY = touch.clientY;
 
-                        // 이동 거리가 10px 이상일 경우 이동으로 간주
                         let deltaX = Math.abs(currentX - initialTouchX);
                         let deltaY = Math.abs(currentY - initialTouchY);
 
@@ -244,7 +248,10 @@
                 button.addEventListener('touchend', function(e) {
                     e.preventDefault();
                     
-                    // 이동하지 않았고 버튼이 비활성화되지 않은 경우에만 클릭 동작 실행
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
+                    }
+                    
                     if (!hasMoved && !button.disabled) {
                         if (button.id === 'startButton') {
                             startSeating();
@@ -260,8 +267,10 @@
                     initialTouchY = null;
                 }, { passive: false });
 
-                // PC 환경을 위한 클릭 이벤트 유지
                 button.addEventListener('click', function(e) {
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
+                    }
                     if (!('ontouchstart' in window) && !button.disabled) {
                         if (button.id === 'startButton') {
                             startSeating();
@@ -363,6 +372,18 @@
             
             if (!startBtn.disabled) {
                 startBtn.disabled = true;
+                startBtn.style.backgroundColor = '#cccccc';
+                startBtn.style.cursor = 'default';
+                startBtn.style.transform = 'none';
+                startBtn.style.opacity = '0.5';
+                startBtn.style.pointerEvents = 'none';
+                
+                const newButton = startBtn.cloneNode(true);
+                startBtn.parentNode.replaceChild(newButton, startBtn);
+                
+                newButton.className = 'start-button';
+                newButton.disabled = true;
+                
                 await createSeatingChart();
                 shuffleBtn.disabled = false;
                 saveBtn.disabled = false;
@@ -396,25 +417,20 @@
         }
 
         async function saveAsImage() {
-            // 저장 버튼
             const saveBtn = document.getElementById('saveButton');
             saveBtn.disabled = true;
 
             try {
-                // 캡처할 영역 (classroom 클래스를 가진 div)
                 const captureArea = document.querySelector('.classroom');
                 
-                // 버튼들 임시 숨김
                 const buttons = document.querySelectorAll('button');
                 buttons.forEach(btn => btn.style.display = 'none');
 
-                // 캡처 영역 스타일 임시 조정
                 const originalStyle = captureArea.style.cssText;
                 captureArea.style.backgroundColor = '#ffffff';
                 captureArea.style.padding = '20px';
                 captureArea.style.margin = '0';
 
-                // html2canvas 실행
                 const canvas = await html2canvas(captureArea, {
                     backgroundColor: '#ffffff',
                     scale: 2,
@@ -425,15 +441,12 @@
                     height: captureArea.offsetHeight
                 });
 
-                // 원래 스타일 복구
                 captureArea.style.cssText = originalStyle;
                 buttons.forEach(btn => btn.style.display = '');
 
-                // 이미지 데이터 생성
                 const imageData = canvas.toDataURL('image/jpeg', 1.0);
                 const fileName = `자리배치도_${new Date().getTime()}.jpeg`;
 
-                // 다운로드 링크 생성 및 클릭
                 const link = document.createElement('a');
                 link.href = imageData;
                 link.download = fileName;
@@ -445,7 +458,6 @@
                 console.error('이미지 저장 오류:', error);
                 alert('이미지 저장에 실패했습니다. 다시 시도해 주세요.');
             } finally {
-                // 버튼 활성화
                 setTimeout(() => {
                     saveBtn.disabled = false;
                 }, 1000);
