@@ -388,60 +388,43 @@
                     const now = new Date();
                     const fileName = `자리배치도_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.jpeg`;
 
-                    canvas.toBlob(async function(blob) {
+                    canvas.toBlob((blob) => {
                         try {
                             if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                                if ('showSaveFilePicker' in window) {
-                                    try {
-                                        const handle = await window.showSaveFilePicker({
-                                            suggestedName: fileName,
-                                            types: [{
-                                                description: 'JPEG 이미지',
-                                                accept: {'image/jpeg': ['.jpeg']},
-                                            }],
-                                        });
-                                        const writable = await handle.createWritable();
-                                        await writable.write(blob);
-                                        await writable.close();
-                                    } catch (err) {
-                                        const url = URL.createObjectURL(blob);
-                                        const a = document.createElement('a');
-                                        a.href = url;
-                                        a.download = fileName;
-                                        a.style.display = 'none';
-                                        document.body.appendChild(a);
-                                        a.click();
-                                        URL.revokeObjectURL(url);
-                                        document.body.removeChild(a);
-                                    }
-                                } else {
-                                    const reader = new FileReader();
-                                    reader.onload = function() {
-                                        const url = reader.result;
-                                        const a = document.createElement('a');
-                                        a.href = url;
-                                        a.download = fileName;
-                                        a.style.display = 'none';
-                                        document.body.appendChild(a);
-                                        a.click();
-                                        document.body.removeChild(a);
-                                    };
-                                    reader.readAsDataURL(blob);
+                                const file = new File([blob], fileName, { type: 'image/jpeg' });
+                                const url = URL.createObjectURL(file);
+                                
+                                const newTab = window.open();
+                                if (newTab) {
+                                    newTab.document.write(`
+                                        <html>
+                                            <head>
+                                                <title>${fileName}</title>
+                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                            </head>
+                                            <body style="margin:0; display:flex; justify-content:center; align-items:center; background-color:#f0f0f0;">
+                                                <img src="${url}" style="max-width:100%; height:auto;">
+                                                <div style="position:fixed; bottom:20px; left:0; right:0; text-align:center; padding:10px;">
+                                                    <p>이미지를 길게 터치한 후 저장하세요.</p>
+                                                </div>
+                                            </body>
+                                        </html>
+                                    `);
+                                    newTab.document.close();
                                 }
                             } else {
                                 const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = fileName;
-                                document.body.appendChild(a);
-                                a.click();
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = fileName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
                                 URL.revokeObjectURL(url);
-                                document.body.removeChild(a);
                             }
                         } catch (error) {
                             console.error('파일 저장 중 오류:', error);
-                            const url = URL.createObjectURL(blob);
-                            window.open(url, '_blank');
+                            alert('이미지 저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
                         }
                     }, 'image/jpeg', 1.0);
 
@@ -467,8 +450,10 @@
             };
 
             saveButton.addEventListener('click', handleSave);
-            
-            saveButton.addEventListener('touchend', handleSave);
+            saveButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleSave(e);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
