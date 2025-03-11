@@ -56,19 +56,29 @@
         }
         .seat {
             width: clamp(70px, 15vw, 100px);
-            height: clamp(40px, 8vw, 60px);
+            height: clamp(60px, 12vw, 80px);
             margin: 2px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             border-radius: 5px;
             color: white;
             font-weight: bold;
-            font-size: clamp(12px, 2.5vw, 16px);
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             opacity: 0;
             transform: scale(0.3);
             transition: all 0.3s ease;
+            padding: 5px;
+            text-align: center;
+        }
+        .seat .name {
+            font-size: clamp(12px, 2.5vw, 16px);
+            margin-bottom: 2px;
+        }
+        .seat .major {
+            font-size: clamp(10px, 2vw, 14px);
+            opacity: 0.9;
         }
         .seat:hover {
             transform: scale(1.05);
@@ -172,9 +182,9 @@
     <h1>자리 배치도</h1>
     <div class="classroom" id="capture-area">
         <div class="date-display" id="currentDate"></div>
-        <div class="front">[강의실 앞]</div>
+        <div class="front">[강의실 뒤]</div>
         <div id="seating-chart"></div>
-        <div class="back">[강의실 뒤]</div>
+        <div class="back">[강의실 앞]</div>
     </div>
     <div class="button-container">
         <button type="button" id="startButton" class="button start-button">배치 시작</button>
@@ -183,15 +193,44 @@
     </div>
 
     <script>
-        const students = [
-            "김형훈", "안성식", "손광민", "윤은아", "신원진",
-            "배철한", "신지훈", "권준하", "조원철", "김나담",
-            "박동욱", "최광수", "김아영", "반미진", "박신영",
-            "이재민", "박경민", "김현식", "이동욱", "홍성범",
-            "김다윤", "송윤영", "이진호", "최규화", "이수현",
-            "정경원", "김영호", "임태성", "김가영", "장현진",
-            "김명화", "이현아", "서병화", "황수정"
-        ];
+        const studentData = {
+            "최규화": "미술",
+            "김형훈": "국어",
+            "김영호": "기계금속",
+            "임태성": "중국어",
+            "이수현": "중국어",
+            "정경원": "국어",
+            "김가영": "기계금속",
+            "이진호": "전자공학",
+            "이현아": "중국어",
+            "장현진": "중국어",
+            "김명화": "중국어",
+            "서병화": "중국어",
+            "박경민": "영어",
+            "이재민": "수학",
+            "박신영": "국어",
+            "이동욱": "전기전자통신",
+            "김현식": "기계금속",
+            "반미진": "화공",
+            "김아영": "가정",
+            "김다윤": "기계금속",
+            "송윤영": "물리",
+            "홍성범": "영어",
+            "윤은아": "전기전자통신",
+            "신원진": "수학",
+            "배철한": "농공",
+            "황수정": "생물",
+            "신지훈": "국어",
+            "권준하": "생물",
+            "손광민": "기계금속",
+            "최광수": "수학",
+            "안성식": "국어",
+            "조원철": "지구과학",
+            "김나담": "중국어",
+            "박동욱": "일반사회"
+        };
+
+        const students = Object.keys(studentData);
 
         const colors = [
             '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c',
@@ -300,7 +339,7 @@
 
             const seats = [];
             
-            for (let row = 0; row < 10; row++) {
+            for (let row = 9; row >= 0; row--) {
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'row';
 
@@ -310,13 +349,27 @@
                     const seat = document.createElement('div');
                     seat.className = 'seat';
                     const student = shuffledStudents[row * 4 + i];
-                    seat.textContent = student;
+                    
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'name';
+                    nameDiv.textContent = student;
+                    
+                    const majorDiv = document.createElement('div');
+                    majorDiv.className = 'major';
+                    
                     if (student === '공석') {
                         seat.classList.add('empty');
+                        majorDiv.textContent = '';
+                    } else {
+                        majorDiv.textContent = `(${studentData[student]})`;
                     }
+                    
+                    seat.appendChild(nameDiv);
+                    seat.appendChild(majorDiv);
+                    
                     seat.style.backgroundColor = colors[row];
                     leftPair.appendChild(seat);
-                    seats.push(seat);
+                    seats.unshift(seat);
                 }
                 rowDiv.appendChild(leftPair);
 
@@ -330,13 +383,27 @@
                     const seat = document.createElement('div');
                     seat.className = 'seat';
                     const student = shuffledStudents[row * 4 + i];
-                    seat.textContent = student;
+                    
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'name';
+                    nameDiv.textContent = student;
+                    
+                    const majorDiv = document.createElement('div');
+                    majorDiv.className = 'major';
+                    
                     if (student === '공석') {
                         seat.classList.add('empty');
+                        majorDiv.textContent = '';
+                    } else {
+                        majorDiv.textContent = `(${studentData[student]})`;
                     }
+                    
+                    seat.appendChild(nameDiv);
+                    seat.appendChild(majorDiv);
+                    
                     seat.style.backgroundColor = colors[row];
                     rightPair.appendChild(seat);
-                    seats.push(seat);
+                    seats.unshift(seat);
                 }
                 rowDiv.appendChild(rightPair);
 
