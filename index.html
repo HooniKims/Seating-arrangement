@@ -554,23 +554,32 @@
                 const captureScale = 2;
                 // Get dimensions using getBoundingClientRect
                 const rect = captureArea.getBoundingClientRect();
-                // Use rect dimensions for canvas and window size hints
+                // Use rect dimensions for canvas width/height
                 const canvasWidth = rect.width;
                 const canvasHeight = rect.height;
+
+                // Define a large simulated window size
+                const simulatedWindowWidth = 1920;
+                const simulatedWindowHeight = 1080; // Or enough height to cover the chart
+
+                console.log(`Capturing element with rect dimensions: ${canvasWidth}x${canvasHeight}`);
+                console.log(`Using simulated window: ${simulatedWindowWidth}x${simulatedWindowHeight}`);
 
                 const sourceCanvas = await html2canvas(captureArea, {
                     backgroundColor: '#ffffff',
                     scale: captureScale,
                     useCORS: true,
                     allowTaint: true,
-                    logging: false,
-                    // Explicitly set dimensions based on getBoundingClientRect
+                    logging: true, // Enable logging for debugging
+                    // Explicitly set capture dimensions based on getBoundingClientRect
                     width: canvasWidth,
                     height: canvasHeight,
-                    windowWidth: canvasWidth,
-                    windowHeight: canvasHeight
-                    // Removed x, y, scrollX, scrollY
+                    // Explicitly set a large window size for rendering simulation
+                    windowWidth: simulatedWindowWidth,
+                    windowHeight: simulatedWindowHeight
                 });
+
+                console.log(`Source canvas created with dimensions: ${sourceCanvas.width}x${sourceCanvas.height}`);
 
                 // --- Create A4 Target Canvas ---
                 const a4Ratio = Math.sqrt(2); // Approx 1.414
@@ -595,6 +604,8 @@
                 // Center vertically
                 const drawY = (targetHeightPx - scaledHeight) / 2;
 
+                console.log(`Scaling source to target: Ratio=${scaleRatio}, Scaled=${scaledWidth}x${scaledHeight}, Pos=${drawX},${drawY}`);
+
                 // --- Draw scaled source image ---
                 ctx.drawImage(sourceCanvas, drawX, drawY, scaledWidth, scaledHeight);
 
@@ -613,6 +624,7 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                console.log(`Image download triggered: ${fileName}`);
 
             } catch (error) {
                 console.error(`이미지 저장 오류 (${fileNameSuffix}):`, error);
