@@ -555,7 +555,7 @@
 
             try {
                  // --- Capture with html2canvas ---
-                const captureScale = 2;
+                const captureScale = 2; // Capture at higher resolution
                 console.log(`Attempting capture with scale: ${captureScale}`);
 
                 const sourceCanvas = await html2canvas(captureArea, {
@@ -563,9 +563,7 @@
                     scale: captureScale,
                     useCORS: true,
                     allowTaint: true,
-                    // REMOVED: width, height, windowWidth, windowHeight, logging
-                    // Let html2canvas determine dimensions, but ensure page is scrolled up
-                    // and rendering had time to settle.
+                    // Let html2canvas determine dimensions
                 });
 
                 console.log(`Source canvas created with dimensions: ${sourceCanvas.width}x${sourceCanvas.height}`);
@@ -573,7 +571,7 @@
                 // --- Create A4 Target Canvas ---
                 const a4Ratio = Math.sqrt(2); // Approx 1.414
                 const targetWidthPx = 1240; // A4 width at ~150 DPI
-                const targetHeightPx = Math.floor(targetWidthPx * a4Ratio);
+                const targetHeightPx = Math.floor(targetWidthPx * a4Ratio); // Approx 1754
 
                 const targetCanvas = document.createElement('canvas');
                 targetCanvas.width = targetWidthPx;
@@ -584,14 +582,29 @@
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, targetWidthPx, targetHeightPx);
 
-                // --- Calculate scaling and position ---
-                const scaleRatio = targetWidthPx / sourceCanvas.width;
-                const scaledWidth = targetWidthPx;
-                const scaledHeight = sourceCanvas.height * scaleRatio;
-                const drawX = 0;
-                const drawY = (targetHeightPx - scaledHeight) / 2; // Center vertically
+                // --- Calculate scaling to fit *within* A4, preserving aspect ratio ---
+                const targetRatio = targetWidthPx / targetHeightPx;
+                const sourceRatio = sourceCanvas.width / sourceCanvas.height;
 
-                console.log(`Scaling source to target: Ratio=${scaleRatio}, Scaled=${scaledWidth}x${scaledHeight}, Pos=${drawX},${drawY}`);
+                let scaledWidth, scaledHeight, scaleRatio;
+
+                if (sourceRatio > targetRatio) {
+                    // Source is wider than target aspect ratio, scale based on width
+                    scaleRatio = targetWidthPx / sourceCanvas.width;
+                    scaledWidth = targetWidthPx;
+                    scaledHeight = sourceCanvas.height * scaleRatio;
+                } else {
+                    // Source is taller than or equal to target aspect ratio, scale based on height
+                    scaleRatio = targetHeightPx / sourceCanvas.height;
+                    scaledWidth = sourceCanvas.width * scaleRatio;
+                    scaledHeight = targetHeightPx;
+                }
+
+                // --- Calculate position to center the scaled image ---
+                const drawX = (targetWidthPx - scaledWidth) / 2;
+                const drawY = (targetHeightPx - scaledHeight) / 2;
+
+                console.log(`Scaling source to fit A4: Ratio=${scaleRatio}, Scaled=${scaledWidth}x${scaledHeight}, Pos=${drawX},${drawY}`);
 
                 // --- Draw scaled source image ---
                 ctx.drawImage(sourceCanvas, drawX, drawY, scaledWidth, scaledHeight);
@@ -604,7 +617,7 @@
                 const fileName = `자리배치도_A4_${fileNameSuffix}_${dateTimeStr}.jpeg`;
 
                 // --- Trigger download ---
-                const imageData = targetCanvas.toDataURL('image/jpeg', 0.95);
+                const imageData = targetCanvas.toDataURL('image/jpeg', 0.95); // Use JPEG for smaller size
                 const link = document.createElement('a');
                 link.href = imageData;
                 link.download = fileName;
