@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -228,6 +229,13 @@
             flex-direction: column;
             justify-content: flex-start;
         }
+        .print-mode .print-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10mm;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -283,6 +291,7 @@
         };
 
         const students = Object.keys(studentData);
+
         const colors = [
             '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c',
             '#1abc9c', '#34495e', '#e67e22', '#7f8c8d', '#16a085'
@@ -298,6 +307,7 @@
 
         function addButtonListeners() {
             const buttons = document.querySelectorAll('.button');
+            
             buttons.forEach(button => {
                 let isTouching = false;
                 let initialTouchX = null;
@@ -305,7 +315,9 @@
                 let hasMoved = false;
 
                 button.addEventListener('touchstart', function(e) {
-                    if (button.id === 'startButton' && button.disabled) return;
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
+                    }
                     isTouching = true;
                     let touch = e.touches[0];
                     initialTouchX = touch.clientX;
@@ -314,36 +326,57 @@
                 }, { passive: true });
 
                 button.addEventListener('touchmove', function(e) {
-                    if (button.id === 'startButton' && button.disabled) return;
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
+                    }
                     if (isTouching) {
                         let touch = e.touches[0];
                         let currentX = touch.clientX;
                         let currentY = touch.clientY;
+
                         let deltaX = Math.abs(currentX - initialTouchX);
                         let deltaY = Math.abs(currentY - initialTouchY);
-                        if (deltaX > 10 || deltaY > 10) hasMoved = true;
+
+                        if (deltaX > 10 || deltaY > 10) {
+                            hasMoved = true;
+                        }
                     }
                 }, { passive: true });
 
                 button.addEventListener('touchend', function(e) {
                     e.preventDefault();
-                    if (button.id === 'startButton' && button.disabled) return;
-                    if (!hasMoved && !button.disabled) {
-                        if (button.id === 'startButton') startSeating();
-                        else if (button.id === 'shuffleButton') shuffleSeats();
-                        else if (button.id === 'saveButton') saveAsImage();
+                    
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
                     }
+                    
+                    if (!hasMoved && !button.disabled) {
+                        if (button.id === 'startButton') {
+                            startSeating();
+                        } else if (button.id === 'shuffleButton') {
+                            shuffleSeats();
+                        } else if (button.id === 'saveButton') {
+                            saveAsImage();
+                        }
+                    }
+
                     isTouching = false;
                     initialTouchX = null;
                     initialTouchY = null;
                 }, { passive: false });
 
                 button.addEventListener('click', function(e) {
-                    if (button.id === 'startButton' && button.disabled) return;
+                    if (button.id === 'startButton' && button.disabled) {
+                        return;
+                    }
                     if (!('ontouchstart' in window) && !button.disabled) {
-                        if (button.id === 'startButton') startSeating();
-                        else if (button.id === 'shuffleButton') shuffleSeats();
-                        else if (button.id === 'saveButton') saveAsImage();
+                        if (button.id === 'startButton') {
+                            startSeating();
+                        } else if (button.id === 'shuffleButton') {
+                            shuffleSeats();
+                        } else if (button.id === 'saveButton') {
+                            saveAsImage();
+                        }
                     }
                 });
             });
@@ -356,50 +389,16 @@
             
             shuffleButton.disabled = true;
             startButton.disabled = true;
+            
             chart.innerHTML = '';
             
-            const otherStudents = students.filter(student => 
-                student !== "김가영" && student !== "김형훈"
-            );
-            let shuffledStudents = shuffleArray([...otherStudents]);
-            
-            let allSeats = Array(40).fill('공석');
-            
-            const gaYoungPos = 24 + Math.floor(Math.random() * 10);
-            allSeats[gaYoungPos] = "김가영";
-            
-            const gaYoungRow = Math.floor(gaYoungPos / 4);
-            const gaYoungCol = gaYoungPos % 4;
-            
-            let hyungHoonPositions = [];
-            if (gaYoungRow > 0) {
-                hyungHoonPositions.push((gaYoungRow-1)*4 + gaYoungCol);
-                if (gaYoungCol > 0) hyungHoonPositions.push((gaYoungRow-1)*4 + (gaYoungCol-1));
-                if (gaYoungCol < 3) hyungHoonPositions.push((gaYoungRow-1)*4 + (gaYoungCol+1));
-            }
-            
-            const validPositions = hyungHoonPositions.filter(pos => allSeats[pos] === '공석');
-            const hyungHoonPos = validPositions.length > 0 
-                ? validPositions[Math.floor(Math.random() * validPositions.length)]
-                : (() => {
-                    let pos;
-                    do {
-                        pos = Math.floor(Math.random() * 40);
-                    } while (allSeats[pos] !== '공석' || (pos >= 24 && pos <= 33));
-                    return pos;
-                })();
-            
-            allSeats[hyungHoonPos] = "김형훈";
-            
-            let studentIndex = 0;
-            for (let i = 0; i < allSeats.length; i++) {
-                if (allSeats[i] === '공석' && studentIndex < shuffledStudents.length) {
-                    allSeats[i] = shuffledStudents[studentIndex];
-                    studentIndex++;
-                }
+            let shuffledStudents = shuffleArray([...students]);
+            while (shuffledStudents.length < 40) {
+                shuffledStudents.push('공석');
             }
 
             const seats = [];
+            
             for (let row = 9; row >= 0; row--) {
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'row';
@@ -409,20 +408,25 @@
                 for (let i = 0; i < 2; i++) {
                     const seat = document.createElement('div');
                     seat.className = 'seat';
-                    const student = allSeats[row * 4 + i];
+                    const student = shuffledStudents[row * 4 + i];
+                    
                     const nameDiv = document.createElement('div');
                     nameDiv.className = 'name';
                     nameDiv.textContent = student;
+                    
                     const majorDiv = document.createElement('div');
                     majorDiv.className = 'major';
+                    
                     if (student === '공석') {
                         seat.classList.add('empty');
                         majorDiv.textContent = '';
                     } else {
                         majorDiv.textContent = `(${studentData[student]})`;
                     }
+                    
                     seat.appendChild(nameDiv);
                     seat.appendChild(majorDiv);
+                    
                     seat.style.backgroundColor = colors[row];
                     leftPair.appendChild(seat);
                     seats.unshift(seat);
@@ -438,25 +442,31 @@
                 for (let i = 2; i < 4; i++) {
                     const seat = document.createElement('div');
                     seat.className = 'seat';
-                    const student = allSeats[row * 4 + i];
+                    const student = shuffledStudents[row * 4 + i];
+                    
                     const nameDiv = document.createElement('div');
                     nameDiv.className = 'name';
                     nameDiv.textContent = student;
+                    
                     const majorDiv = document.createElement('div');
                     majorDiv.className = 'major';
+                    
                     if (student === '공석') {
                         seat.classList.add('empty');
                         majorDiv.textContent = '';
                     } else {
                         majorDiv.textContent = `(${studentData[student]})`;
                     }
+                    
                     seat.appendChild(nameDiv);
                     seat.appendChild(majorDiv);
+                    
                     seat.style.backgroundColor = colors[row];
                     rightPair.appendChild(seat);
                     seats.unshift(seat);
                 }
                 rowDiv.appendChild(rightPair);
+
                 chart.appendChild(rowDiv);
             }
 
@@ -468,6 +478,7 @@
             shuffleButton.disabled = false;
             startButton.disabled = false;
             document.getElementById('saveButton').disabled = false;
+            
             updateDate();
         }
 
@@ -495,6 +506,7 @@
                 
                 const newButton = startBtn.cloneNode(true);
                 startBtn.parentNode.replaceChild(newButton, startBtn);
+                
                 newButton.className = 'start-button';
                 newButton.disabled = true;
                 
@@ -507,18 +519,21 @@
         function updateDate() {
             const dateDisplay = document.getElementById('currentDate');
             const now = new Date();
+            
             const dateStr = now.toLocaleDateString('ko-KR', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 weekday: 'long'
             });
+            
             const timeStr = now.toLocaleTimeString('ko-KR', {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: false
             });
+            
             dateDisplay.textContent = `작성일: ${dateStr} ${timeStr}`;
         }
 
@@ -536,35 +551,54 @@
                 const buttons = document.querySelectorAll('button');
                 buttons.forEach(btn => btn.style.display = 'none');
 
+                // 현재 날짜와 시간 포맷팅
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('ko-KR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit'
                 }).replace(/\./g, '').replace(/\s/g, '');
+                
                 const timeStr = now.toLocaleTimeString('ko-KR', {
                     hour: '2-digit',
                     minute: '2-digit',
                     hour12: false
                 }).replace(/:/g, '');
 
+                const dateTimeStr = `${dateStr}_${timeStr}`;
+
+                // 원래 스타일 저장
                 const originalStyle = captureArea.style.cssText;
                 const originalClass = captureArea.className;
+                const originalContent = captureArea.innerHTML;
+
+                // 제목 추가 및 A4 크기에 맞게 스타일 적용
                 captureArea.className = 'classroom print-mode';
+                captureArea.innerHTML = `${originalContent}`;
 
+                // 모바일 환경 체크
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                const a4Width = 210 * 10;
-                const a4Height = 297 * 10;
+                
+                // A4 크기 (픽셀)
+                const a4Width = 210 * 10; // 210mm
+                const a4Height = 297 * 10; // 297mm
 
-                let scale = isMobile 
-                    ? Math.min(
-                        (Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0) / a4Width),
-                        (Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0) / a4Height)
-                    ) * window.devicePixelRatio
-                    : Math.min(
+                let scale;
+                if (isMobile) {
+                    // 모바일에서는 viewport 크기에 맞춰 스케일 조정
+                    const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+                    const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+                    scale = Math.min(
+                        (viewportWidth / a4Width),
+                        (viewportHeight / a4Height)
+                    ) * window.devicePixelRatio;
+                } else {
+                    // PC에서는 기존 스케일 유지
+                    scale = Math.min(
                         (a4Width / captureArea.scrollWidth) * 1.3,
                         (a4Height / captureArea.scrollHeight) * 1.3
                     );
+                }
 
                 const canvas = await html2canvas(captureArea, {
                     backgroundColor: '#ffffff',
@@ -576,34 +610,35 @@
                     windowHeight: isMobile ? window.innerHeight : undefined
                 });
 
+                // 원래 스타일 복원
                 captureArea.className = originalClass;
                 captureArea.style.cssText = originalStyle;
                 buttons.forEach(btn => btn.style.display = '');
 
+                // 캔버스를 A4 비율로 조정
                 const finalCanvas = document.createElement('canvas');
                 const ctx = finalCanvas.getContext('2d');
                 
                 if (isMobile) {
+                    // 모바일에서는 viewport 크기에 맞춰 조정
                     finalCanvas.width = canvas.width;
                     finalCanvas.height = canvas.height;
-                } else {
-                    finalCanvas.width = a4Width * 1.3;
-                    finalCanvas.height = a4Height * 1.3;
-                }
-                
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-                
-                if (isMobile) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
                     ctx.drawImage(canvas, 0, 0);
                 } else {
+                    // PC에서는 기존 로직 유지
+                    finalCanvas.width = a4Width * 1.3;
+                    finalCanvas.height = a4Height * 1.3;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
                     const x = (finalCanvas.width - canvas.width / 2) / 2;
                     const y = (finalCanvas.height - canvas.height / 2) / 2;
                     ctx.drawImage(canvas, x, y, canvas.width / 2, canvas.height / 2);
                 }
 
                 const imageData = finalCanvas.toDataURL('image/jpeg', 1.0);
-                const fileName = `자리배치도_${dateStr}_${timeStr}.jpeg`;
+                const fileName = `자리배치도_${dateTimeStr}.jpeg`;
 
                 const link = document.createElement('a');
                 link.href = imageData;
