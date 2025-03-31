@@ -552,9 +552,11 @@
             try {
                  // --- Capture with html2canvas ---
                 const captureScale = 2;
-                // Explicitly set width/height based on the element's scroll dimensions
-                const canvasWidth = captureArea.scrollWidth;
-                const canvasHeight = captureArea.scrollHeight;
+                // Get dimensions using getBoundingClientRect
+                const rect = captureArea.getBoundingClientRect();
+                // Use rect dimensions for canvas and window size hints
+                const canvasWidth = rect.width;
+                const canvasHeight = rect.height;
 
                 const sourceCanvas = await html2canvas(captureArea, {
                     backgroundColor: '#ffffff',
@@ -562,14 +564,12 @@
                     useCORS: true,
                     allowTaint: true,
                     logging: false,
-                    // Tell html2canvas the exact dimensions to render
+                    // Explicitly set dimensions based on getBoundingClientRect
+                    width: canvasWidth,
+                    height: canvasHeight,
                     windowWidth: canvasWidth,
-                    windowHeight: canvasHeight,
-                    // Ensure it captures from the top-left
-                    x: 0,
-                    y: 0,
-                    scrollX: 0, // Explicitly set scroll to 0
-                    scrollY: 0
+                    windowHeight: canvasHeight
+                    // Removed x, y, scrollX, scrollY
                 });
 
                 // --- Create A4 Target Canvas ---
@@ -640,12 +640,10 @@
 
             try {
                 buttons.forEach(btn => btn.style.visibility = 'hidden');
-                // No longer using capture-mode class
                 await captureAndSaveCanvas(captureArea, '기본', false); // Call helper
 
             } finally {
                 buttons.forEach(btn => btn.style.visibility = '');
-                // No longer using capture-mode class
                 window.scrollTo(0, originalScrollTop); // Restore scroll position
                 setTimeout(() => {
                     // Re-enable buttons only if chart exists
@@ -653,7 +651,7 @@
                          saveBtn.disabled = false;
                          saveFlippedBtn.disabled = false;
                     }
-                }, 100); // Shorter delay might be sufficient
+                }, 100);
             }
         }
 
@@ -668,12 +666,10 @@
 
             try {
                 buttons.forEach(btn => btn.style.visibility = 'hidden');
-                // No longer using capture-mode class
                 await captureAndSaveCanvas(captureArea, '앞뒤변경', true); // Call helper with isFlipped = true
 
             } finally {
                 buttons.forEach(btn => btn.style.visibility = '');
-                // No longer using capture-mode class
                 window.scrollTo(0, originalScrollTop); // Restore scroll position
                  setTimeout(() => {
                     // Re-enable buttons only if chart exists
@@ -681,7 +677,7 @@
                          saveBtn.disabled = false;
                          saveFlippedBtn.disabled = false;
                     }
-                }, 100); // Shorter delay might be sufficient
+                }, 100);
             }
         }
 
