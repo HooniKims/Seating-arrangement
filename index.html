@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -64,7 +63,8 @@
         .seat {
             width: 100%;
             min-width: 0;
-            height: clamp(65px, 13vw, 85px);
+            /* Increased height values */
+            height: clamp(75px, 15vw, 100px);
             margin: 2px;
             display: flex;
             flex-direction: column;
@@ -82,8 +82,9 @@
             box-sizing: border-box;
         }
         .seat .name {
-            font-size: clamp(14px, 2.8vw, 18px);
-            margin-bottom: 3px;
+            /* Increased font size values */
+            font-size: clamp(16px, 3.2vw, 20px);
+            margin-bottom: 4px; /* Slightly increased margin */
             width: 100%;
             text-align: center;
             overflow: hidden;
@@ -91,7 +92,8 @@
             white-space: nowrap;
         }
         .seat .major {
-            font-size: clamp(10px, 2vw, 13px);
+             /* Increased font size values */
+            font-size: clamp(12px, 2.4vw, 15px);
             opacity: 0.9;
             white-space: nowrap;
             overflow: hidden;
@@ -113,10 +115,13 @@
             font-size: 16px;
             border: none;
             border-radius: 5px;
-            margin: 10px;
+            margin: 10px; /* Keep margin for spacing when wrapped */
             color: white;
             font-weight: bold;
             transition: all 0.3s ease;
+            flex-grow: 1; /* Allow buttons to grow */
+            flex-basis: 200px; /* Base width before growing/shrinking */
+            text-align: center;
         }
         .button:active {
             transform: scale(0.95);
@@ -130,17 +135,23 @@
         .save-button {
             background-color: #FF5722;
         }
+        /* New style for the flipped save button */
+        .save-flipped-button {
+            background-color: #ff9800; /* Orange color */
+        }
         .button:disabled {
             background-color: #90A4AE;
             opacity: 0.7;
+            cursor: not-allowed; /* Indicate disabled state */
         }
         .seat.empty {
             color: rgba(255, 255, 255, 0.8);
-            text-shadow: 
-                -1px -1px 0 #333,  
+            text-shadow:
+                -1px -1px 0 #333,
                 1px -1px 0 #333,
                 -1px 1px 0 #333,
                 1px 1px 0 #333;
+            background-color: #B0BEC5 !important; /* Ensure empty seat color overrides row color */
         }
         .seat.show {
             opacity: 1;
@@ -151,10 +162,14 @@
         }
         .button-container {
             display: flex;
-            gap: 15px;
-            margin: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
+            gap: 15px; /* Spacing between buttons */
+            margin: 20px auto; /* Center container and add vertical margin */
+            padding: 0 10px; /* Add padding to prevent touching edges */
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            justify-content: center; /* Center buttons horizontally */
+            width: 100%; /* Take full width */
+            max-width: 900px; /* Optional: Max width for the button area */
+            box-sizing: border-box;
         }
         .date-display {
             text-align: right;
@@ -178,30 +193,51 @@
                 gap: 2px;
             }
             .seat {
-                height: clamp(55px, 11vw, 75px);
+                height: clamp(65px, 13vw, 85px);
+            }
+            .seat .name {
+                font-size: clamp(14px, 2.8vw, 18px);
+            }
+            .seat .major {
+                font-size: clamp(10px, 2vw, 13px);
             }
             .aisle {
                 width: clamp(15px, 3vw, 30px);
                 margin: 0 clamp(3px, 1vw, 10px);
             }
             .button {
-                width: 100%;
-                margin: 5px 0;
-                padding: 20px;
-                font-size: 18px;
+                /* Adjust button padding/font for smaller screens if needed */
+                padding: 15px 20px;
+                font-size: 14px;
+                flex-basis: 150px; /* Adjust basis for smaller screens */
+                margin: 5px; /* Reduce margin */
+            }
+            .button-container {
+                gap: 10px; /* Reduce gap */
             }
             .date-display {
                 font-size: 12px;
                 padding: 8px;
             }
         }
+        @media screen and (max-width: 480px) { /* Adjust breakpoint for wrapping */
+             .button {
+                flex-basis: calc(50% - 10px); /* Two buttons per row approx */
+                font-size: 14px;
+                padding: 12px 15px;
+             }
+             .button-container {
+                 gap: 10px;
+             }
+        }
+
         @media screen and (max-width: 360px) {
             .classroom {
                 padding: 5px;
                 width: 100%;
             }
             .seat {
-                height: clamp(45px, 9vw, 65px);
+                height: clamp(55px, 11vw, 75px);
             }
             .seat .name {
                 font-size: clamp(12px, 2.4vw, 16px);
@@ -217,24 +253,18 @@
                 font-size: clamp(1rem, 2.5vw, 1.2rem);
                 margin: 10px 0;
             }
+             .button {
+                flex-basis: calc(100% - 10px); /* One button per row on very small screens */
+                font-size: 16px; /* Slightly larger font when full width */
+                padding: 15px;
+             }
+             .button-container {
+                 gap: 8px;
+             }
         }
-        .classroom.print-mode {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            padding: 15mm;
-            box-sizing: border-box;
-            background-color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
-        .print-mode .print-title {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 10mm;
-            color: #000;
+        /* Styles specifically for html2canvas capture */
+        .capture-mode {
+            overflow: hidden !important;
         }
     </style>
 </head>
@@ -242,55 +272,32 @@
     <h1>자리 배치도</h1>
     <div class="classroom" id="capture-area">
         <div class="date-display" id="currentDate"></div>
-        <div class="front">[강의실 뒤]</div>
+        <div class="front">[강의실 앞]</div>
         <div id="seating-chart"></div>
-        <div class="back">[강의실 앞]</div>
+        <div class="back">[강의실 뒤]</div>
     </div>
     <div class="button-container">
         <button type="button" id="startButton" class="button start-button">배치 시작</button>
         <button type="button" id="shuffleButton" class="button shuffle-button" disabled>자리 재배치</button>
         <button type="button" id="saveButton" class="button save-button" disabled>이미지로 저장</button>
+        <button type="button" id="saveFlippedButton" class="button save-flipped-button" disabled>앞뒤변경저장</button> <!-- New Button -->
     </div>
 
     <script>
         const studentData = {
-            "최규화": "미술",
-            "김형훈": "국어",
-            "김영호": "기계금속",
-            "임태성": "중국어",
-            "이수현": "중국어",
-            "정경원": "국어",
-            "김가영": "기계금속",
-            "이진호": "전자공학",
-            "이현아": "중국어",
-            "장현진": "중국어",
-            "김명화": "중국어",
-            "서병화": "중국어",
-            "박경민": "영어",
-            "이재민": "수학",
-            "박신영": "국어",
-            "이동욱": "전기전자통신",
-            "김현식": "기계금속",
-            "반미진": "화공",
-            "김아영": "가정",
-            "김다윤": "기계금속",
-            "송윤영": "물리",
-            "홍성범": "영어",
-            "윤은아": "전기전자통신",
-            "신원진": "수학",
-            "배철한": "농공",
-            "황수정": "생물",
-            "신지훈": "국어",
-            "권준하": "생물",
-            "손광민": "기계금속",
-            "최광수": "수학",
-            "안성식": "국어",
-            "조원철": "지구과학",
-            "김나담": "중국어",
-            "박동욱": "일반사회"
+            "최규화": "미술", "김형훈": "국어", "김영호": "기계금속", "임태성": "중국어",
+            "이수현": "중국어", "정경원": "국어", "김가영": "기계금속", "이진호": "전자공학",
+            "이현아": "중국어", "장현진": "중국어", "김명화": "중국어", "서병화": "중국어",
+            "박경민": "영어", "이재민": "수학", "박신영": "국어", "이동욱": "전기전자통신",
+            "김현식": "기계금속", "반미진": "화공", "김아영": "가정", "김다윤": "기계금속",
+            "송윤영": "물리", "홍성범": "영어", "윤은아": "전기전자통신", "신원진": "수학",
+            "배철한": "농공", "황수정": "생물", "신지훈": "국어", "권준하": "생물",
+            "손광민": "기계금속", "최광수": "수학", "안성식": "국어", "조원철": "지구과학",
+            "김나담": "중국어", "박동욱": "일반사회"
         };
 
         const students = Object.keys(studentData);
+        const totalSeats = 36; // 9 rows * 4 seats
 
         const colors = [
             '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c',
@@ -307,7 +314,6 @@
 
         function addButtonListeners() {
             const buttons = document.querySelectorAll('.button');
-            
             buttons.forEach(button => {
                 let isTouching = false;
                 let initialTouchX = null;
@@ -315,9 +321,7 @@
                 let hasMoved = false;
 
                 button.addEventListener('touchstart', function(e) {
-                    if (button.id === 'startButton' && button.disabled) {
-                        return;
-                    }
+                    if (button.disabled) return;
                     isTouching = true;
                     let touch = e.touches[0];
                     initialTouchX = touch.clientX;
@@ -326,110 +330,119 @@
                 }, { passive: true });
 
                 button.addEventListener('touchmove', function(e) {
-                    if (button.id === 'startButton' && button.disabled) {
-                        return;
-                    }
-                    if (isTouching) {
-                        let touch = e.touches[0];
-                        let currentX = touch.clientX;
-                        let currentY = touch.clientY;
-
-                        let deltaX = Math.abs(currentX - initialTouchX);
-                        let deltaY = Math.abs(currentY - initialTouchY);
-
-                        if (deltaX > 10 || deltaY > 10) {
-                            hasMoved = true;
-                        }
-                    }
+                    if (!isTouching || button.disabled) return;
+                    let touch = e.touches[0];
+                    let currentX = touch.clientX;
+                    let currentY = touch.clientY;
+                    let deltaX = Math.abs(currentX - initialTouchX);
+                    let deltaY = Math.abs(currentY - initialTouchY);
+                    if (deltaX > 10 || deltaY > 10) hasMoved = true;
                 }, { passive: true });
 
                 button.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    
-                    if (button.id === 'startButton' && button.disabled) {
-                        return;
+                    if (!isTouching || button.disabled) return;
+                    e.preventDefault(); // Prevent click event after touch
+                    if (!hasMoved) {
+                        handleButtonClick(button.id);
                     }
-                    
-                    if (!hasMoved && !button.disabled) {
-                        if (button.id === 'startButton') {
-                            startSeating();
-                        } else if (button.id === 'shuffleButton') {
-                            shuffleSeats();
-                        } else if (button.id === 'saveButton') {
-                            saveAsImage();
-                        }
-                    }
-
                     isTouching = false;
                     initialTouchX = null;
                     initialTouchY = null;
                 }, { passive: false });
 
                 button.addEventListener('click', function(e) {
-                    if (button.id === 'startButton' && button.disabled) {
-                        return;
-                    }
-                    if (!('ontouchstart' in window) && !button.disabled) {
-                        if (button.id === 'startButton') {
-                            startSeating();
-                        } else if (button.id === 'shuffleButton') {
-                            shuffleSeats();
-                        } else if (button.id === 'saveButton') {
-                            saveAsImage();
-                        }
+                    if (button.disabled || isTouching) return; // Prevent click if touch is active or button disabled
+                    if (!('ontouchstart' in window) || e.detail === 0) {
+                         handleButtonClick(button.id);
                     }
                 });
             });
         }
 
+        function handleButtonClick(buttonId) {
+             if (buttonId === 'startButton') {
+                startSeating();
+            } else if (buttonId === 'shuffleButton') {
+                shuffleSeats();
+            } else if (buttonId === 'saveButton') {
+                saveAsImage();
+            } else if (buttonId === 'saveFlippedButton') { // Handle new button
+                saveFlippedImage();
+            }
+        }
+
+
         async function createSeatingChart() {
             const chart = document.getElementById('seating-chart');
             const shuffleButton = document.getElementById('shuffleButton');
             const startButton = document.getElementById('startButton');
-            
+            const saveButton = document.getElementById('saveButton');
+            const saveFlippedButton = document.getElementById('saveFlippedButton'); // Get new button
+
+            // Temporarily disable buttons during generation
             shuffleButton.disabled = true;
-            startButton.disabled = true;
-            
-            chart.innerHTML = '';
-            
-            let shuffledStudents = shuffleArray([...students]);
-            while (shuffledStudents.length < 40) {
-                shuffledStudents.push('공석');
+            saveButton.disabled = true;
+            saveFlippedButton.disabled = true; // Disable new button
+
+            chart.innerHTML = ''; // Clear previous chart
+
+            const numStudents = students.length;
+            const numEmptySeats = Math.max(0, totalSeats - numStudents);
+            const backCornerIndices = [0, 3]; // Indices for row 0 (back row), seats 0 and 3
+
+            let assignees = [...students];
+            for (let i = 0; i < numEmptySeats; i++) {
+                assignees.push('공석');
+            }
+            shuffleArray(assignees);
+
+            const finalSeatLayout = new Array(totalSeats).fill(null);
+            let placedEmptyCorners = 0;
+
+            // Place empty seats in back corners first if needed
+            if (numEmptySeats >= 1) {
+                const emptySeatIndex1 = assignees.indexOf('공석');
+                if (emptySeatIndex1 !== -1) {
+                    finalSeatLayout[backCornerIndices[0]] = assignees.splice(emptySeatIndex1, 1)[0];
+                    placedEmptyCorners++;
+                }
+            }
+            if (numEmptySeats >= 2) {
+                 const emptySeatIndex2 = assignees.indexOf('공석');
+                 if (emptySeatIndex2 !== -1) {
+                    finalSeatLayout[backCornerIndices[1]] = assignees.splice(emptySeatIndex2, 1)[0];
+                    placedEmptyCorners++;
+                 }
             }
 
-            const seats = [];
-            
-            for (let row = 9; row >= 0; row--) {
+            // Fill remaining seats
+            let assigneeIndex = 0;
+            for (let i = 0; i < totalSeats; i++) {
+                if (finalSeatLayout[i] === null) {
+                    if (assigneeIndex < assignees.length) {
+                        finalSeatLayout[i] = assignees[assigneeIndex++];
+                    } else {
+                        finalSeatLayout[i] = 'Error';
+                        console.error("Error assigning seats: Ran out of assignees.");
+                    }
+                }
+            }
+
+            const seatElements = [];
+
+            // Create seat elements row by row (from back to front visually)
+            for (let row = 0; row < 9; row++) {
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'row';
 
                 const leftPair = document.createElement('div');
                 leftPair.className = 'seat-pair';
                 for (let i = 0; i < 2; i++) {
-                    const seat = document.createElement('div');
-                    seat.className = 'seat';
-                    const student = shuffledStudents[row * 4 + i];
-                    
-                    const nameDiv = document.createElement('div');
-                    nameDiv.className = 'name';
-                    nameDiv.textContent = student;
-                    
-                    const majorDiv = document.createElement('div');
-                    majorDiv.className = 'major';
-                    
-                    if (student === '공석') {
-                        seat.classList.add('empty');
-                        majorDiv.textContent = '';
-                    } else {
-                        majorDiv.textContent = `(${studentData[student]})`;
-                    }
-                    
-                    seat.appendChild(nameDiv);
-                    seat.appendChild(majorDiv);
-                    
-                    seat.style.backgroundColor = colors[row];
+                    const seatIndex = row * 4 + i;
+                    const seatContent = finalSeatLayout[seatIndex];
+                    const seat = createSeatElement(seatContent, studentData, colors[row % colors.length]);
                     leftPair.appendChild(seat);
-                    seats.unshift(seat);
+                    seatElements.push(seat);
                 }
                 rowDiv.appendChild(leftPair);
 
@@ -440,206 +453,157 @@
                 const rightPair = document.createElement('div');
                 rightPair.className = 'seat-pair';
                 for (let i = 2; i < 4; i++) {
-                    const seat = document.createElement('div');
-                    seat.className = 'seat';
-                    const student = shuffledStudents[row * 4 + i];
-                    
-                    const nameDiv = document.createElement('div');
-                    nameDiv.className = 'name';
-                    nameDiv.textContent = student;
-                    
-                    const majorDiv = document.createElement('div');
-                    majorDiv.className = 'major';
-                    
-                    if (student === '공석') {
-                        seat.classList.add('empty');
-                        majorDiv.textContent = '';
-                    } else {
-                        majorDiv.textContent = `(${studentData[student]})`;
-                    }
-                    
-                    seat.appendChild(nameDiv);
-                    seat.appendChild(majorDiv);
-                    
-                    seat.style.backgroundColor = colors[row];
+                    const seatIndex = row * 4 + i;
+                    const seatContent = finalSeatLayout[seatIndex];
+                    const seat = createSeatElement(seatContent, studentData, colors[row % colors.length]);
                     rightPair.appendChild(seat);
-                    seats.unshift(seat);
+                    seatElements.push(seat);
                 }
                 rowDiv.appendChild(rightPair);
 
-                chart.appendChild(rowDiv);
+                chart.prepend(rowDiv); // Prepend to show row 0 at the bottom
             }
 
-            for (let i = 0; i < seats.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                seats[i].classList.add('show');
+            // Animate seats appearing
+            for (let i = 0; i < seatElements.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, 25)); // Animation delay
+                seatElements[i].classList.add('show');
             }
 
+            // Re-enable shuffle and save buttons
             shuffleButton.disabled = false;
-            startButton.disabled = false;
-            document.getElementById('saveButton').disabled = false;
-            
-            updateDate();
+            saveButton.disabled = false;
+            saveFlippedButton.disabled = false; // Enable new button
+            // Keep startButton disabled if it was already disabled
+
+            updateDate(); // Update date display
         }
+
+        function createSeatElement(student, studentData, color) {
+            const seat = document.createElement('div');
+            seat.className = 'seat';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'name';
+            nameDiv.textContent = student;
+
+            const majorDiv = document.createElement('div');
+            majorDiv.className = 'major';
+
+            if (student === '공석') {
+                seat.classList.add('empty');
+                majorDiv.textContent = '';
+            } else {
+                majorDiv.textContent = `(${studentData[student] || 'N/A'})`;
+                seat.style.backgroundColor = color;
+            }
+
+            seat.appendChild(nameDiv);
+            seat.appendChild(majorDiv);
+
+            return seat;
+        }
+
 
         async function shuffleSeats() {
             const shuffleBtn = document.getElementById('shuffleButton');
             if (!shuffleBtn.disabled) {
-                shuffleBtn.disabled = true;
-                await createSeatingChart();
-                shuffleBtn.disabled = false;
+                await createSeatingChart(); // Regenerate chart
             }
         }
 
         async function startSeating() {
             const startBtn = document.getElementById('startButton');
-            const shuffleBtn = document.getElementById('shuffleButton');
-            const saveBtn = document.getElementById('saveButton');
-            
-            if (!startBtn.disabled) {
-                startBtn.disabled = true;
-                startBtn.style.backgroundColor = '#cccccc';
-                startBtn.style.cursor = 'default';
-                startBtn.style.transform = 'none';
-                startBtn.style.opacity = '0.5';
-                startBtn.style.pointerEvents = 'none';
-                
-                const newButton = startBtn.cloneNode(true);
-                startBtn.parentNode.replaceChild(newButton, startBtn);
-                
-                newButton.className = 'start-button';
-                newButton.disabled = true;
-                
-                await createSeatingChart();
-                shuffleBtn.disabled = false;
-                saveBtn.disabled = false;
+             if (!startBtn.disabled) {
+                await createSeatingChart(); // Generate chart
+                startBtn.disabled = true; // <-- Disable start button after first run
             }
         }
+
 
         function updateDate() {
             const dateDisplay = document.getElementById('currentDate');
             const now = new Date();
-            
-            const dateStr = now.toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'long'
-            });
-            
-            const timeStr = now.toLocaleTimeString('ko-KR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-            
+            const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             dateDisplay.textContent = `작성일: ${dateStr} ${timeStr}`;
         }
 
         function startClock() {
             updateDate();
-            setInterval(updateDate, 1000);
+            setInterval(updateDate, 1000); // Update clock every second
         }
 
-        async function saveAsImage() {
-            const saveBtn = document.getElementById('saveButton');
-            saveBtn.disabled = true;
+        // --- Helper function for common save logic ---
+        async function captureAndSaveCanvas(captureArea, fileNameSuffix, isFlipped = false) {
+            const seatingChart = captureArea.querySelector('#seating-chart');
+            const frontLabel = captureArea.querySelector('.front');
+            const backLabel = captureArea.querySelector('.back');
+            let originalRowsOrder = null;
+            let originalFrontText = '';
+            let originalBackText = '';
+
+            if (isFlipped) {
+                // Store original state
+                originalRowsOrder = Array.from(seatingChart.children);
+                originalFrontText = frontLabel.textContent;
+                originalBackText = backLabel.textContent;
+
+                // Reverse rows
+                seatingChart.innerHTML = ''; // Clear
+                originalRowsOrder.reverse().forEach(row => seatingChart.appendChild(row)); // Append in reverse
+
+                // Swap labels
+                frontLabel.textContent = originalBackText;
+                backLabel.textContent = originalFrontText;
+            }
 
             try {
-                const captureArea = document.querySelector('.classroom');
-                const buttons = document.querySelectorAll('button');
-                buttons.forEach(btn => btn.style.display = 'none');
-
-                // 현재 날짜와 시간 포맷팅
-                const now = new Date();
-                const dateStr = now.toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                }).replace(/\./g, '').replace(/\s/g, '');
-                
-                const timeStr = now.toLocaleTimeString('ko-KR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                }).replace(/:/g, '');
-
-                const dateTimeStr = `${dateStr}_${timeStr}`;
-
-                // 원래 스타일 저장
-                const originalStyle = captureArea.style.cssText;
-                const originalClass = captureArea.className;
-                const originalContent = captureArea.innerHTML;
-
-                // 제목 추가 및 A4 크기에 맞게 스타일 적용
-                captureArea.className = 'classroom print-mode';
-                captureArea.innerHTML = `${originalContent}`;
-
-                // 모바일 환경 체크
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                
-                // A4 크기 (픽셀)
-                const a4Width = 210 * 10; // 210mm
-                const a4Height = 297 * 10; // 297mm
-
-                let scale;
-                if (isMobile) {
-                    // 모바일에서는 viewport 크기에 맞춰 스케일 조정
-                    const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-                    const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-                    scale = Math.min(
-                        (viewportWidth / a4Width),
-                        (viewportHeight / a4Height)
-                    ) * window.devicePixelRatio;
-                } else {
-                    // PC에서는 기존 스케일 유지
-                    scale = Math.min(
-                        (a4Width / captureArea.scrollWidth) * 1.3,
-                        (a4Height / captureArea.scrollHeight) * 1.3
-                    );
-                }
-
-                const canvas = await html2canvas(captureArea, {
+                 // --- Capture with html2canvas at higher scale ---
+                const captureScale = 2; // Capture at 2x resolution
+                const sourceCanvas = await html2canvas(captureArea, {
                     backgroundColor: '#ffffff',
-                    scale: scale * 2,
+                    scale: captureScale,
                     useCORS: true,
                     allowTaint: true,
                     logging: false,
-                    windowWidth: isMobile ? window.innerWidth : undefined,
-                    windowHeight: isMobile ? window.innerHeight : undefined
+                    windowWidth: captureArea.scrollWidth,
+                    windowHeight: captureArea.scrollHeight
                 });
 
-                // 원래 스타일 복원
-                captureArea.className = originalClass;
-                captureArea.style.cssText = originalStyle;
-                buttons.forEach(btn => btn.style.display = '');
+                // --- Create A4 Target Canvas ---
+                const a4Ratio = Math.sqrt(2);
+                const targetWidthPx = 1240;
+                const targetHeightPx = Math.floor(targetWidthPx * a4Ratio);
 
-                // 캔버스를 A4 비율로 조정
-                const finalCanvas = document.createElement('canvas');
-                const ctx = finalCanvas.getContext('2d');
-                
-                if (isMobile) {
-                    // 모바일에서는 viewport 크기에 맞춰 조정
-                    finalCanvas.width = canvas.width;
-                    finalCanvas.height = canvas.height;
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-                    ctx.drawImage(canvas, 0, 0);
-                } else {
-                    // PC에서는 기존 로직 유지
-                    finalCanvas.width = a4Width * 1.3;
-                    finalCanvas.height = a4Height * 1.3;
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-                    const x = (finalCanvas.width - canvas.width / 2) / 2;
-                    const y = (finalCanvas.height - canvas.height / 2) / 2;
-                    ctx.drawImage(canvas, x, y, canvas.width / 2, canvas.height / 2);
-                }
+                const targetCanvas = document.createElement('canvas');
+                targetCanvas.width = targetWidthPx;
+                targetCanvas.height = targetHeightPx;
+                const ctx = targetCanvas.getContext('2d');
 
-                const imageData = finalCanvas.toDataURL('image/jpeg', 1.0);
-                const fileName = `자리배치도_${dateTimeStr}.jpeg`;
+                // --- Fill background ---
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, targetWidthPx, targetHeightPx);
 
+                // --- Calculate scaling and position ---
+                const scaleRatio = targetWidthPx / sourceCanvas.width;
+                const scaledWidth = targetWidthPx;
+                const scaledHeight = sourceCanvas.height * scaleRatio;
+                const drawX = 0;
+                const drawY = (targetHeightPx - scaledHeight) / 2;
+
+                // --- Draw scaled source image ---
+                ctx.drawImage(sourceCanvas, drawX, drawY, scaledWidth, scaledHeight);
+
+                // --- Generate filename ---
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '').replace(/\s/g, '');
+                const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(/:/g, '');
+                const dateTimeStr = `${dateStr}_${timeStr}`;
+                const fileName = `자리배치도_A4_${fileNameSuffix}_${dateTimeStr}.jpeg`;
+
+                // --- Trigger download ---
+                const imageData = targetCanvas.toDataURL('image/jpeg', 0.95);
                 const link = document.createElement('a');
                 link.href = imageData;
                 link.download = fileName;
@@ -648,14 +612,77 @@
                 document.body.removeChild(link);
 
             } catch (error) {
-                console.error('이미지 저장 오류:', error);
-                alert('이미지 저장에 실패했습니다. 다시 시도해 주세요.');
+                console.error(`이미지 저장 오류 (${fileNameSuffix}):`, error);
+                alert(`이미지 저장(${fileNameSuffix})에 실패했습니다. 다시 시도해 주세요.`);
             } finally {
-                setTimeout(() => {
-                    saveBtn.disabled = false;
-                }, 1000);
+                 if (isFlipped && originalRowsOrder) {
+                    // Restore original DOM order and labels
+                    seatingChart.innerHTML = '';
+                    originalRowsOrder.reverse().forEach(row => seatingChart.appendChild(row)); // Put back original order
+                    frontLabel.textContent = originalFrontText;
+                    backLabel.textContent = originalBackText;
+                }
             }
         }
+
+        async function saveAsImage() {
+            const saveBtn = document.getElementById('saveButton');
+            const saveFlippedBtn = document.getElementById('saveFlippedButton');
+            saveBtn.disabled = true; // Disable both during save
+            saveFlippedBtn.disabled = true;
+            const captureArea = document.getElementById('capture-area');
+            const buttons = document.querySelectorAll('.button');
+            const originalScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            try {
+                buttons.forEach(btn => btn.style.visibility = 'hidden');
+                captureArea.classList.add('capture-mode');
+                window.scrollTo(0, 0);
+
+                await captureAndSaveCanvas(captureArea, '기본'); // Call helper
+
+            } finally {
+                buttons.forEach(btn => btn.style.visibility = '');
+                captureArea.classList.remove('capture-mode');
+                window.scrollTo(0, originalScrollTop);
+                setTimeout(() => {
+                    if (document.getElementById('seating-chart').hasChildNodes()) {
+                         saveBtn.disabled = false; // Re-enable both
+                         saveFlippedBtn.disabled = false;
+                    }
+                }, 500);
+            }
+        }
+
+        async function saveFlippedImage() {
+            const saveBtn = document.getElementById('saveButton');
+            const saveFlippedBtn = document.getElementById('saveFlippedButton');
+            saveBtn.disabled = true; // Disable both during save
+            saveFlippedBtn.disabled = true;
+            const captureArea = document.getElementById('capture-area');
+            const buttons = document.querySelectorAll('.button');
+            const originalScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            try {
+                buttons.forEach(btn => btn.style.visibility = 'hidden');
+                captureArea.classList.add('capture-mode');
+                window.scrollTo(0, 0);
+
+                await captureAndSaveCanvas(captureArea, '앞뒤변경', true); // Call helper with isFlipped = true
+
+            } finally {
+                buttons.forEach(btn => btn.style.visibility = '');
+                captureArea.classList.remove('capture-mode');
+                window.scrollTo(0, originalScrollTop);
+                 setTimeout(() => {
+                    if (document.getElementById('seating-chart').hasChildNodes()) {
+                         saveBtn.disabled = false; // Re-enable both
+                         saveFlippedBtn.disabled = false;
+                    }
+                }, 500);
+            }
+        }
+
 
         document.addEventListener('DOMContentLoaded', function() {
             const chart = document.getElementById('seating-chart');
