@@ -31,6 +31,8 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             box-sizing: border-box;
+            /* Ensure layout calculation is stable */
+            overflow: hidden; /* Contain floats/margins */
         }
         .front, .back {
             text-align: center;
@@ -63,7 +65,6 @@
         .seat {
             width: 100%;
             min-width: 0;
-            /* Increased height values */
             height: clamp(75px, 15vw, 100px);
             margin: 2px;
             display: flex;
@@ -82,9 +83,8 @@
             box-sizing: border-box;
         }
         .seat .name {
-            /* Increased font size values */
             font-size: clamp(16px, 3.2vw, 20px);
-            margin-bottom: 4px; /* Slightly increased margin */
+            margin-bottom: 4px;
             width: 100%;
             text-align: center;
             overflow: hidden;
@@ -92,7 +92,6 @@
             white-space: nowrap;
         }
         .seat .major {
-             /* Increased font size values */
             font-size: clamp(12px, 2.4vw, 15px);
             opacity: 0.9;
             white-space: nowrap;
@@ -115,12 +114,12 @@
             font-size: 16px;
             border: none;
             border-radius: 5px;
-            margin: 10px; /* Keep margin for spacing when wrapped */
+            margin: 10px;
             color: white;
             font-weight: bold;
             transition: all 0.3s ease;
-            flex-grow: 1; /* Allow buttons to grow */
-            flex-basis: 200px; /* Base width before growing/shrinking */
+            flex-grow: 1;
+            flex-basis: 200px;
             text-align: center;
         }
         .button:active {
@@ -135,14 +134,13 @@
         .save-button {
             background-color: #FF5722;
         }
-        /* New style for the flipped save button */
         .save-flipped-button {
-            background-color: #ff9800; /* Orange color */
+            background-color: #ff9800;
         }
         .button:disabled {
             background-color: #90A4AE;
             opacity: 0.7;
-            cursor: not-allowed; /* Indicate disabled state */
+            cursor: not-allowed;
         }
         .seat.empty {
             color: rgba(255, 255, 255, 0.8);
@@ -151,7 +149,7 @@
                 1px -1px 0 #333,
                 -1px 1px 0 #333,
                 1px 1px 0 #333;
-            background-color: #B0BEC5 !important; /* Ensure empty seat color overrides row color */
+            background-color: #B0BEC5 !important;
         }
         .seat.show {
             opacity: 1;
@@ -162,13 +160,13 @@
         }
         .button-container {
             display: flex;
-            gap: 15px; /* Spacing between buttons */
-            margin: 20px auto; /* Center container and add vertical margin */
-            padding: 0 10px; /* Add padding to prevent touching edges */
-            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-            justify-content: center; /* Center buttons horizontally */
-            width: 100%; /* Take full width */
-            max-width: 900px; /* Optional: Max width for the button area */
+            gap: 15px;
+            margin: 20px auto;
+            padding: 0 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
             box-sizing: border-box;
         }
         .date-display {
@@ -206,23 +204,22 @@
                 margin: 0 clamp(3px, 1vw, 10px);
             }
             .button {
-                /* Adjust button padding/font for smaller screens if needed */
                 padding: 15px 20px;
                 font-size: 14px;
-                flex-basis: 150px; /* Adjust basis for smaller screens */
-                margin: 5px; /* Reduce margin */
+                flex-basis: 150px;
+                margin: 5px;
             }
             .button-container {
-                gap: 10px; /* Reduce gap */
+                gap: 10px;
             }
             .date-display {
                 font-size: 12px;
                 padding: 8px;
             }
         }
-        @media screen and (max-width: 480px) { /* Adjust breakpoint for wrapping */
+        @media screen and (max-width: 480px) {
              .button {
-                flex-basis: calc(50% - 10px); /* Two buttons per row approx */
+                flex-basis: calc(50% - 10px);
                 font-size: 14px;
                 padding: 12px 15px;
              }
@@ -254,18 +251,15 @@
                 margin: 10px 0;
             }
              .button {
-                flex-basis: calc(100% - 10px); /* One button per row on very small screens */
-                font-size: 16px; /* Slightly larger font when full width */
+                flex-basis: calc(100% - 10px);
+                font-size: 16px;
                 padding: 15px;
              }
              .button-container {
                  gap: 8px;
              }
         }
-        /* Styles specifically for html2canvas capture */
-        .capture-mode {
-            overflow: hidden !important;
-        }
+        /* No longer using .capture-mode */
     </style>
 </head>
 <body>
@@ -280,7 +274,7 @@
         <button type="button" id="startButton" class="button start-button">배치 시작</button>
         <button type="button" id="shuffleButton" class="button shuffle-button" disabled>자리 재배치</button>
         <button type="button" id="saveButton" class="button save-button" disabled>이미지로 저장</button>
-        <button type="button" id="saveFlippedButton" class="button save-flipped-button" disabled>앞뒤변경저장</button> <!-- New Button -->
+        <button type="button" id="saveFlippedButton" class="button save-flipped-button" disabled>앞뒤변경저장</button>
     </div>
 
     <script>
@@ -341,7 +335,7 @@
 
                 button.addEventListener('touchend', function(e) {
                     if (!isTouching || button.disabled) return;
-                    e.preventDefault(); // Prevent click event after touch
+                    e.preventDefault();
                     if (!hasMoved) {
                         handleButtonClick(button.id);
                     }
@@ -351,7 +345,7 @@
                 }, { passive: false });
 
                 button.addEventListener('click', function(e) {
-                    if (button.disabled || isTouching) return; // Prevent click if touch is active or button disabled
+                    if (button.disabled || isTouching) return;
                     if (!('ontouchstart' in window) || e.detail === 0) {
                          handleButtonClick(button.id);
                     }
@@ -366,7 +360,7 @@
                 shuffleSeats();
             } else if (buttonId === 'saveButton') {
                 saveAsImage();
-            } else if (buttonId === 'saveFlippedButton') { // Handle new button
+            } else if (buttonId === 'saveFlippedButton') {
                 saveFlippedImage();
             }
         }
@@ -377,18 +371,17 @@
             const shuffleButton = document.getElementById('shuffleButton');
             const startButton = document.getElementById('startButton');
             const saveButton = document.getElementById('saveButton');
-            const saveFlippedButton = document.getElementById('saveFlippedButton'); // Get new button
+            const saveFlippedButton = document.getElementById('saveFlippedButton');
 
-            // Temporarily disable buttons during generation
             shuffleButton.disabled = true;
             saveButton.disabled = true;
-            saveFlippedButton.disabled = true; // Disable new button
+            saveFlippedButton.disabled = true;
 
-            chart.innerHTML = ''; // Clear previous chart
+            chart.innerHTML = '';
 
             const numStudents = students.length;
             const numEmptySeats = Math.max(0, totalSeats - numStudents);
-            const backCornerIndices = [0, 3]; // Indices for row 0 (back row), seats 0 and 3
+            const backCornerIndices = [0, 3];
 
             let assignees = [...students];
             for (let i = 0; i < numEmptySeats; i++) {
@@ -399,7 +392,6 @@
             const finalSeatLayout = new Array(totalSeats).fill(null);
             let placedEmptyCorners = 0;
 
-            // Place empty seats in back corners first if needed
             if (numEmptySeats >= 1) {
                 const emptySeatIndex1 = assignees.indexOf('공석');
                 if (emptySeatIndex1 !== -1) {
@@ -415,7 +407,6 @@
                  }
             }
 
-            // Fill remaining seats
             let assigneeIndex = 0;
             for (let i = 0; i < totalSeats; i++) {
                 if (finalSeatLayout[i] === null) {
@@ -430,7 +421,6 @@
 
             const seatElements = [];
 
-            // Create seat elements row by row (from back to front visually)
             for (let row = 0; row < 9; row++) {
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'row';
@@ -461,22 +451,19 @@
                 }
                 rowDiv.appendChild(rightPair);
 
-                chart.prepend(rowDiv); // Prepend to show row 0 at the bottom
+                chart.prepend(rowDiv);
             }
 
-            // Animate seats appearing
             for (let i = 0; i < seatElements.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 25)); // Animation delay
+                await new Promise(resolve => setTimeout(resolve, 25));
                 seatElements[i].classList.add('show');
             }
 
-            // Re-enable shuffle and save buttons
             shuffleButton.disabled = false;
             saveButton.disabled = false;
-            saveFlippedButton.disabled = false; // Enable new button
-            // Keep startButton disabled if it was already disabled
+            saveFlippedButton.disabled = false;
 
-            updateDate(); // Update date display
+            updateDate();
         }
 
         function createSeatElement(student, studentData, color) {
@@ -508,15 +495,15 @@
         async function shuffleSeats() {
             const shuffleBtn = document.getElementById('shuffleButton');
             if (!shuffleBtn.disabled) {
-                await createSeatingChart(); // Regenerate chart
+                await createSeatingChart();
             }
         }
 
         async function startSeating() {
             const startBtn = document.getElementById('startButton');
              if (!startBtn.disabled) {
-                await createSeatingChart(); // Generate chart
-                startBtn.disabled = true; // <-- Disable start button after first run
+                await createSeatingChart();
+                startBtn.disabled = true;
             }
         }
 
@@ -531,7 +518,7 @@
 
         function startClock() {
             updateDate();
-            setInterval(updateDate, 1000); // Update clock every second
+            setInterval(updateDate, 1000);
         }
 
         // --- Helper function for common save logic ---
@@ -543,37 +530,51 @@
             let originalFrontText = '';
             let originalBackText = '';
 
+            // Scroll to top before doing anything else
+            window.scrollTo(0, 0);
+            // Allow a tiny moment for scroll to take effect
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             if (isFlipped) {
-                // Store original state
                 originalRowsOrder = Array.from(seatingChart.children);
                 originalFrontText = frontLabel.textContent;
                 originalBackText = backLabel.textContent;
 
-                // Reverse rows
-                seatingChart.innerHTML = ''; // Clear
-                originalRowsOrder.reverse().forEach(row => seatingChart.appendChild(row)); // Append in reverse
+                seatingChart.innerHTML = '';
+                originalRowsOrder.reverse().forEach(row => seatingChart.appendChild(row));
 
-                // Swap labels
                 frontLabel.textContent = originalBackText;
                 backLabel.textContent = originalFrontText;
+                 // Allow a tiny moment for DOM changes to render
+                await new Promise(resolve => setTimeout(resolve, 50));
             }
 
             try {
-                 // --- Capture with html2canvas at higher scale ---
-                const captureScale = 2; // Capture at 2x resolution
+                 // --- Capture with html2canvas ---
+                const captureScale = 2;
+                // Explicitly set width/height based on the element's scroll dimensions
+                const canvasWidth = captureArea.scrollWidth;
+                const canvasHeight = captureArea.scrollHeight;
+
                 const sourceCanvas = await html2canvas(captureArea, {
                     backgroundColor: '#ffffff',
                     scale: captureScale,
                     useCORS: true,
                     allowTaint: true,
                     logging: false,
-                    windowWidth: captureArea.scrollWidth,
-                    windowHeight: captureArea.scrollHeight
+                    // Tell html2canvas the exact dimensions to render
+                    windowWidth: canvasWidth,
+                    windowHeight: canvasHeight,
+                    // Ensure it captures from the top-left
+                    x: 0,
+                    y: 0,
+                    scrollX: 0, // Explicitly set scroll to 0
+                    scrollY: 0
                 });
 
                 // --- Create A4 Target Canvas ---
-                const a4Ratio = Math.sqrt(2);
-                const targetWidthPx = 1240;
+                const a4Ratio = Math.sqrt(2); // Approx 1.414
+                const targetWidthPx = 1240; // A4 width at ~150 DPI
                 const targetHeightPx = Math.floor(targetWidthPx * a4Ratio);
 
                 const targetCanvas = document.createElement('canvas');
@@ -586,10 +587,12 @@
                 ctx.fillRect(0, 0, targetWidthPx, targetHeightPx);
 
                 // --- Calculate scaling and position ---
+                // Fit the source canvas width to the target A4 width
                 const scaleRatio = targetWidthPx / sourceCanvas.width;
                 const scaledWidth = targetWidthPx;
                 const scaledHeight = sourceCanvas.height * scaleRatio;
                 const drawX = 0;
+                // Center vertically
                 const drawY = (targetHeightPx - scaledHeight) / 2;
 
                 // --- Draw scaled source image ---
@@ -603,7 +606,7 @@
                 const fileName = `자리배치도_A4_${fileNameSuffix}_${dateTimeStr}.jpeg`;
 
                 // --- Trigger download ---
-                const imageData = targetCanvas.toDataURL('image/jpeg', 0.95);
+                const imageData = targetCanvas.toDataURL('image/jpeg', 0.95); // Use JPEG for smaller size
                 const link = document.createElement('a');
                 link.href = imageData;
                 link.download = fileName;
@@ -613,12 +616,13 @@
 
             } catch (error) {
                 console.error(`이미지 저장 오류 (${fileNameSuffix}):`, error);
-                alert(`이미지 저장(${fileNameSuffix})에 실패했습니다. 다시 시도해 주세요.`);
+                alert(`이미지 저장(${fileNameSuffix})에 실패했습니다. 콘솔을 확인해주세요.`);
             } finally {
                  if (isFlipped && originalRowsOrder) {
                     // Restore original DOM order and labels
                     seatingChart.innerHTML = '';
-                    originalRowsOrder.reverse().forEach(row => seatingChart.appendChild(row)); // Put back original order
+                    // IMPORTANT: Reverse the reversed array to get original order back
+                    originalRowsOrder.reverse().forEach(row => seatingChart.appendChild(row));
                     frontLabel.textContent = originalFrontText;
                     backLabel.textContent = originalBackText;
                 }
@@ -628,7 +632,7 @@
         async function saveAsImage() {
             const saveBtn = document.getElementById('saveButton');
             const saveFlippedBtn = document.getElementById('saveFlippedButton');
-            saveBtn.disabled = true; // Disable both during save
+            saveBtn.disabled = true;
             saveFlippedBtn.disabled = true;
             const captureArea = document.getElementById('capture-area');
             const buttons = document.querySelectorAll('.button');
@@ -636,28 +640,27 @@
 
             try {
                 buttons.forEach(btn => btn.style.visibility = 'hidden');
-                captureArea.classList.add('capture-mode');
-                window.scrollTo(0, 0);
-
-                await captureAndSaveCanvas(captureArea, '기본'); // Call helper
+                // No longer using capture-mode class
+                await captureAndSaveCanvas(captureArea, '기본', false); // Call helper
 
             } finally {
                 buttons.forEach(btn => btn.style.visibility = '');
-                captureArea.classList.remove('capture-mode');
-                window.scrollTo(0, originalScrollTop);
+                // No longer using capture-mode class
+                window.scrollTo(0, originalScrollTop); // Restore scroll position
                 setTimeout(() => {
-                    if (document.getElementById('seating-chart').hasChildNodes()) {
-                         saveBtn.disabled = false; // Re-enable both
+                    // Re-enable buttons only if chart exists
+                    if (document.getElementById('seating-chart').hasChildNodes() && document.getElementById('seating-chart').textContent.trim() !== '배치 시작 버튼을 눌러주세요.') {
+                         saveBtn.disabled = false;
                          saveFlippedBtn.disabled = false;
                     }
-                }, 500);
+                }, 100); // Shorter delay might be sufficient
             }
         }
 
         async function saveFlippedImage() {
             const saveBtn = document.getElementById('saveButton');
             const saveFlippedBtn = document.getElementById('saveFlippedButton');
-            saveBtn.disabled = true; // Disable both during save
+            saveBtn.disabled = true;
             saveFlippedBtn.disabled = true;
             const captureArea = document.getElementById('capture-area');
             const buttons = document.querySelectorAll('.button');
@@ -665,21 +668,20 @@
 
             try {
                 buttons.forEach(btn => btn.style.visibility = 'hidden');
-                captureArea.classList.add('capture-mode');
-                window.scrollTo(0, 0);
-
+                // No longer using capture-mode class
                 await captureAndSaveCanvas(captureArea, '앞뒤변경', true); // Call helper with isFlipped = true
 
             } finally {
                 buttons.forEach(btn => btn.style.visibility = '');
-                captureArea.classList.remove('capture-mode');
-                window.scrollTo(0, originalScrollTop);
+                // No longer using capture-mode class
+                window.scrollTo(0, originalScrollTop); // Restore scroll position
                  setTimeout(() => {
-                    if (document.getElementById('seating-chart').hasChildNodes()) {
-                         saveBtn.disabled = false; // Re-enable both
+                    // Re-enable buttons only if chart exists
+                    if (document.getElementById('seating-chart').hasChildNodes() && document.getElementById('seating-chart').textContent.trim() !== '배치 시작 버튼을 눌러주세요.') {
+                         saveBtn.disabled = false;
                          saveFlippedBtn.disabled = false;
                     }
-                }, 500);
+                }, 100); // Shorter delay might be sufficient
             }
         }
 
